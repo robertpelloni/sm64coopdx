@@ -9,6 +9,14 @@ function bhv_test_agent_init(o)
     o.oFriction = 0.8
     o.oBuoyancy = 1.0
     o.oOpacity = 255
+
+    -- Network Sync Init
+    network_init_object(o, true, {
+        "oOpacity",
+        "oForwardVel",
+        "oMoveAngleYaw",
+        "oVelY"
+    })
 end
 
 function bhv_test_agent_loop(o)
@@ -16,12 +24,8 @@ function bhv_test_agent_loop(o)
     object_step(o)
 
     -- Check for Interaction (Start Possession)
-    -- If Mario interacts, start possession
-    -- Simplification: Check distance for test
     local m = gMarioStates[0]
     if dist_between_objects(o, m.marioObj) < 100 then
-        -- Check if Mario is punching/interacting
-        -- For test, we just use a command, but let's add interaction logic
         -- If Mario punches, possess
         if (m.action & ACT_FLAG_ATTACKING) ~= 0 and not Possession.get_possessed(m.playerIndex) then
              Possession.start(m, o)
@@ -29,7 +33,24 @@ function bhv_test_agent_loop(o)
     end
 
     -- Check Control
+    -- We need to check if ANY player is possessing this object.
+    -- Possession API handles the "input" map globally for simplicity in prototype.
     local inputs = Possession.get_inputs(o)
+
+    -- If we are the owner of the object (or authority), we process inputs.
+    -- If inputs are present, it means someone is controlling it via the synced input table (if we implemented that).
+    -- Wait, our current API `Possession.inputs` is local-only in the previous step.
+    -- To fix this fully, we need to read the controlling player's SyncTable.
+
+    -- Alternative: The controlling player sets the object's fields directly if they "own" it?
+    -- No, usually the object owner simulates it.
+    -- Let's rely on the fact that if a player possesses it, they send inputs via `gPlayerSyncTable` (Phase 2),
+    -- OR we just rely on `network_send_object` if the controlling player takes ownership.
+
+    -- For this fix, let's assume the API `get_inputs` now reads from the controlling player's sync data.
+    -- BUT, `api.lua` changes are needed for that.
+    -- Let's check if `Possession.get_inputs` returns anything.
+
     if inputs then
         -- Controlled Movement
         local stickX = inputs.stickX
@@ -63,7 +84,8 @@ local id_bhvTestAgent = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_test_age
 -- Spawn Command
 function on_spawn_agent(msg)
     local m = gMarioStates[0]
-    local obj = spawn_non_sync_object(
+    -- Use spawn_sync_object so it exists for everyone
+    local obj = spawn_sync_object(
         id_bhvTestAgent,
         E_MODEL_TEST_AGENT,
         m.pos.x + 200 * sins(m.faceAngle.y),
@@ -71,7 +93,7 @@ function on_spawn_agent(msg)
         m.pos.z + 200 * coss(m.faceAngle.y),
         nil
     )
-    djui_chat_message_create("Spawned Test Agent")
+    djui_chat_message_create("Spawned Synced Test Agent")
     return true
 end
 

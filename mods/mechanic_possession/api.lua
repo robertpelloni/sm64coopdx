@@ -2,7 +2,7 @@
 -- description: Allows players to possess and control objects (Cappy style).
 
 _G.Possession = {}
-_G.Possession.inputs = {} -- Map of obj -> input data
+-- _G.Possession.inputs is deprecated in favor of reading from player sync table directly in loop
 
 -- Constants
 local ACT_POSSESSION = allocate_mario_action(ACT_GROUP_CUTSCENE | ACT_FLAG_IDLE | ACT_FLAG_INVULNERABLE)
@@ -12,23 +12,19 @@ function Possession.start(m, obj)
 
     local sTable = gPlayerSyncTable[m.playerIndex]
 
-    -- Set sync state
-    -- We store the object's sync ID if possible, but Lua objects might not have one easily accessible globally if not synced.
-    -- For local logic, we store the object pointer in a local map.
-    -- For networking, we would need the SyncID.
-    -- Limitation: For this Phase 1, we focus on Local Control + Visual Sync.
-    -- Assuming 'obj' is a SyncObject or standard object.
-
-    _G.Possession.set_possessed_obj(m.playerIndex, obj)
+    -- Sync ID
+    if obj.oSyncID ~= 0 then
+        sTable.possessedSyncID = obj.oSyncID
+    else
+        -- Fallback for non-sync objects (Local only)
+        -- We won't set syncID, so other players won't see it?
+        -- They will see Mario idle.
+    end
 
     -- Set Mario Action to custom Possession state
     set_mario_action(m, ACT_POSSESSION, 0)
 
     -- Hide Mario
-    -- We can use model state
-    m.marioBodyState.modelState = MODEL_STATE_NOISE_ALPHA -- Invisible-ish or custom
-    -- Better: Set a flag to skip rendering in a hook?
-    -- Actually, ACT_GROUP_CUTSCENE + changing model to MODEL_NONE is safest.
     obj_set_model_extended(m.marioObj, MODEL_NONE)
 
     return true
@@ -43,7 +39,8 @@ function Possession.stop(m)
         m.pos.z = obj.oPosZ
     end
 
-    _G.Possession.clear_possessed_obj(m.playerIndex)
+    local sTable = gPlayerSyncTable[m.playerIndex]
+    sTable.possessedSyncID = nil
 
     -- Restore Mario
     set_mario_action(m, ACT_IDLE, 0)
@@ -53,25 +50,35 @@ function Possession.stop(m)
     return true
 end
 
--- Internal State Management
--- We use a local table because object pointers can't be easily synced via SyncTable integers directly without the SyncID system.
--- For local player, it's fine.
-local gPossessedObjects = {}
-
-function Possession.set_possessed_obj(playerIndex, obj)
-    gPossessedObjects[playerIndex] = obj
-end
-
 function Possession.get_possessed(playerIndex)
-    return gPossessedObjects[playerIndex]
-end
-
-function Possession.clear_possessed_obj(playerIndex)
-    gPossessedObjects[playerIndex] = nil
+    local sTable = gPlayerSyncTable[playerIndex]
+    if sTable.possessedSyncID then
+        local obj = sync_object_get_object(sTable.possessedSyncID)
+        return obj
+    end
+    return nil
 end
 
 function Possession.get_inputs(obj)
-    return _G.Possession.inputs[obj]
+    -- Find which player possesses this object
+    for i = 0, MAX_PLAYERS - 1 do
+        local m = gMarioStates[i]
+        -- Check if connected?
+        local sTable = gPlayerSyncTable[i]
+        if sTable and sTable.possessedSyncID == obj.oSyncID then
+            -- This player controls this object
+            -- Return their input
+            -- Note: m.controller is synced automatically!
+            return {
+                stickX = m.controller.stickX,
+                stickY = m.controller.stickY,
+                buttonPressed = m.controller.buttonPressed,
+                buttonDown = m.controller.buttonDown,
+                camAngle = m.area.camera.yaw -- Camera might not be fully synced, but intendedYaw is.
+            }
+        end
+    end
+    return nil
 end
 
 _G.ACT_POSSESSION = ACT_POSSESSION

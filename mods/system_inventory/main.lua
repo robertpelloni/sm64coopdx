@@ -7,6 +7,7 @@ if _G.Inventory then
     Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
     Inventory.define_item("blaster", "Blaster", "Standard issue sidearm.", 1)
     Inventory.define_item("wrench", "OmniWrench", "Fixes everything.", 1)
+    Inventory.define_item("hookshot", "Hookshot", "Grapple to distant surfaces.", 1)
 end
 
 -- Chat Command for testing
@@ -18,6 +19,7 @@ function on_give_item(msg)
     if msg == "mushroom" then id = "mushroom" end
     if msg == "blaster" then id = "blaster" end
     if msg == "wrench" then id = "wrench" end
+    if msg == "hookshot" then id = "hookshot" end
 
     if _G.Inventory then
         Inventory.add_item(m, id, amount)

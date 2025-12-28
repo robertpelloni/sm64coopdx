@@ -4,30 +4,30 @@ function act_possession(m)
     local obj = Possession.get_possessed(m.playerIndex)
 
     if not obj then
-        -- Error state, exit
-        set_mario_action(m, ACT_IDLE, 0)
+        -- If remote player has synced ID but object not loaded yet?
+        -- We wait or show idle.
+        -- If local player, we shouldn't be here if logic is correct.
+
+        if m.playerIndex == 0 then
+             set_mario_action(m, ACT_IDLE, 0)
+        else
+             -- Remote: Keep hidden? Or show Idle?
+             -- If we don't have the object, we can't sync position.
+             -- So we rely on standard Mario position sync.
+             -- But ACT_POSSESSION overrides position in this function.
+             -- If we don't find obj, we do nothing (let engine handle position).
+        end
         return 0
     end
 
     -- 1. Sync Mario to Object
-    -- We keep Mario exactly at the object so the camera follows it.
     m.pos.x = obj.oPosX
     m.pos.y = obj.oPosY
     m.pos.z = obj.oPosZ
 
-    -- 2. Pass Inputs
-    -- We store the controller data in a global table keyed by the object
-    -- The object's behavior script should read this.
-    Possession.inputs[obj] = {
-        stickX = m.controller.stickX,
-        stickY = m.controller.stickY,
-        buttonPressed = m.controller.buttonPressed,
-        buttonDown = m.controller.buttonDown,
-        camAngle = m.area.camera.yaw
-    }
+    -- 2. Pass Inputs (Handled by get_inputs in object loop)
 
     -- 3. Visuals
-    -- Ensure Mario is hidden (redundant safety)
     obj_set_model_extended(m.marioObj, MODEL_NONE)
 
     -- 4. Exit Condition (Z Press)
