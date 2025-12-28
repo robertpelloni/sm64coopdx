@@ -7,8 +7,11 @@ local SHOP_ITEMS = {
     {id = "badge_speed", price = 100},
     {id = "badge_feather", price = 150},
     {id = "badge_health", price = 200},
+    {id = "badge_metal", price = 500},
+    {id = "badge_wing", price = 500},
     {id = "blaster", price = 300},
     {id = "totem_termite", price = 500},
+    {id = "totem_goomba", price = 400},
 }
 local SELECTION = 1
 
@@ -32,14 +35,11 @@ end
 function bhv_shopkeeper_loop(o)
     object_step(o)
 
-    -- Interaction handled via HOOK_ON_INTERACT usually, but standard text interaction is hardcoded.
-    -- We'll check distance and input manually for custom UI.
     local m = gMarioStates[0]
     if dist_between_objects(o, m.marioObj) < 150 then
         if (m.controller.buttonPressed & B_BUTTON) ~= 0 and not SHOP_OPEN then
             SHOP_OPEN = true
             SELECTION = 1
-            -- Stop Mario
             set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
         end
     end
@@ -88,7 +88,15 @@ function shop_ui_render()
 
     -- Items
     local y = cy - 60
-    for i, itemData in ipairs(SHOP_ITEMS) do
+    -- Simple scroll or limit? For now, render first 5 or logic?
+    -- Let's just render all and overflow (Prototype)
+    -- Or simplistic scroll logic based on selection
+
+    local startIdx = 1
+    if SELECTION > 5 then startIdx = SELECTION - 4 end
+
+    for i = startIdx, math.min(startIdx + 4, #SHOP_ITEMS) do
+        local itemData = SHOP_ITEMS[i]
         local def = _G.Inventory.items[itemData.id]
         if def then
             local name = def.name
@@ -114,14 +122,11 @@ function shop_update(m)
     if m.playerIndex ~= 0 then return end
     if not SHOP_OPEN then return end
 
-    -- Prevent movement
     if m.action ~= ACT_WAITING_FOR_DIALOG then
         set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
     end
 
-    -- Navigation
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 or (m.controller.stickY < -20 and m.controller.stickY > -60) then -- Simple stick check
-        -- Debounce handled by buttonPressed usually, stick needs logic. Stick to D-Pad for safety or single press
+    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
         SELECTION = SELECTION + 1
         if SELECTION > #SHOP_ITEMS then SELECTION = 1 end
     end
@@ -130,7 +135,6 @@ function shop_update(m)
         if SELECTION < 1 then SELECTION = #SHOP_ITEMS end
     end
 
-    -- Buy
     if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
         local itemData = SHOP_ITEMS[SELECTION]
         local coins = Inventory.get_count(m, "coin_bag")
@@ -149,7 +153,6 @@ function shop_update(m)
         end
     end
 
-    -- Exit
     if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
         SHOP_OPEN = false
         set_mario_action(m, ACT_IDLE, 0)

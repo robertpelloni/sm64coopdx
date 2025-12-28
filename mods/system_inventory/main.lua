@@ -4,7 +4,7 @@
 -- Test Data
 if _G.Inventory then
     -- Basic
-    Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 1000) -- Increased stack for economy
+    Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 1000)
     Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
 
     -- Weapons
@@ -16,9 +16,12 @@ if _G.Inventory then
     Inventory.define_item("badge_speed", "Badge: Agility", "Run 20% faster.", 1)
     Inventory.define_item("badge_feather", "Badge: Feather", "Fall slower.", 1)
     Inventory.define_item("badge_health", "Badge: Regen", "Regenerate health over time.", 1)
+    Inventory.define_item("badge_metal", "Badge: Metal", "Become heavy and indestructible.", 1)
+    Inventory.define_item("badge_wing", "Badge: Wing", "Fly high!", 1)
 
     -- Transformations
     Inventory.define_item("totem_termite", "Totem: Termite", "Transform into a bug.", 1)
+    Inventory.define_item("totem_goomba", "Totem: Goomba", "Transform into a Goomba.", 1)
 end
 
 -- Chat Command for testing
@@ -35,7 +38,11 @@ function on_give_item(msg)
     if msg == "speed" then id = "badge_speed" end
     if msg == "feather" then id = "badge_feather" end
     if msg == "health" then id = "badge_health" end
+    if msg == "metal" then id = "badge_metal" end
+    if msg == "wing" then id = "badge_wing" end
     if msg == "totem" then id = "totem_termite" end
+    if msg == "goomba" then id = "totem_goomba" end
+
     if msg == "save" then
         Inventory.save()
         djui_chat_message_create("Saved.")
@@ -80,8 +87,6 @@ function economy_update(m)
         Inventory.add_item(m, "coin_bag", diff)
         lastCoinCount = m.numCoins
     elseif m.numCoins < lastCoinCount then
-        -- Level reset or spent coins vanilla way?
-        -- Just update tracker, don't remove from bag
         lastCoinCount = m.numCoins
     end
 end
