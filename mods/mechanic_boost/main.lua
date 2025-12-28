@@ -21,8 +21,11 @@ function act_boost(m)
     end
 
     -- 2. Drain
-    sTable.boostMeter = sTable.boostMeter - BOOST_DRAIN_RATE
-    if sTable.boostMeter < 0 then sTable.boostMeter = 0 end
+    -- Only local player drains their own meter to avoid desync fighting
+    if m.playerIndex == 0 then
+        sTable.boostMeter = sTable.boostMeter - BOOST_DRAIN_RATE
+        if sTable.boostMeter < 0 then sTable.boostMeter = 0 end
+    end
 
     -- 3. Physics
     -- Force high speed
@@ -40,7 +43,7 @@ function act_boost(m)
     m.marioBodyState.handState = MARIO_HAND_OPEN
 
     -- Particles
-    if m.globalTimer % 3 == 0 then
+    if gGlobalTimer % 3 == 0 then
         spawn_non_sync_object(
             id_bhvSparkleSpawn,
             E_MODEL_SPARKLES,
@@ -50,7 +53,7 @@ function act_boost(m)
     end
 
     -- Sound
-    if m.globalTimer % 10 == 0 then
+    if gGlobalTimer % 10 == 0 then
         play_sound(SOUND_AIR_PEACH_TWINKLE, m.marioObj.header.gfx.cameraToObject)
     end
 
@@ -75,18 +78,18 @@ function act_boost(m)
 end
 
 function boost_update(m)
+    if m.playerIndex ~= 0 then return end -- Local Logic Only
+
     local sTable = gPlayerSyncTable[m.playerIndex]
 
     -- Init Meter
     if not sTable.boostMeter then sTable.boostMeter = BOOST_MAX end
 
-    -- Passive Regen
+    -- Passive Regen (Local Only)
     if m.action ~= ACT_BOOST then
         sTable.boostMeter = sTable.boostMeter + BOOST_REGEN_RATE
         if sTable.boostMeter > BOOST_MAX then sTable.boostMeter = BOOST_MAX end
     end
-
-    if m.playerIndex ~= 0 then return end
 
     -- Trigger
     -- Must be moving on ground
@@ -94,16 +97,6 @@ function boost_update(m)
         if (m.controller.buttonPressed & X_BUTTON) ~= 0 and sTable.boostMeter > 10 then
             set_mario_action(m, ACT_BOOST, 0)
         end
-    end
-
-    -- FOV Effect
-    -- This is global state, so we must be careful.
-    -- Only apply for local player.
-    if m.action == ACT_BOOST then
-        -- Override FOV?
-        -- set_override_fov(60) -- Default is 45?
-        -- sm64coopdx doesn't have a direct "add fov" easily accessible without conflict.
-        -- We'll skip FOV for now to ensure compatibility.
     end
 end
 

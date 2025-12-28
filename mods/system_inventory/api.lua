@@ -77,11 +77,6 @@ function Inventory.get_all_items(m)
     local sTable = gPlayerSyncTable[m.playerIndex]
     local list = {}
 
-    -- Since we flattened the table, we need to iterate all keys and find ones starting with "inv_"
-    -- Note: gPlayerSyncTable iteration might not be standard in all Lua versions, but usually works for tables.
-    -- However, smlua's sync table might restrict iteration.
-    -- If iteration is not supported, we must iterate definitions.
-
     for id, def in pairs(_G.Inventory.items) do
         local key = get_key(id)
         local count = sTable[key]
@@ -91,4 +86,49 @@ function Inventory.get_all_items(m)
     end
 
     return list
+end
+
+--------------------------------------------------------------------------------
+-- Persistence
+--------------------------------------------------------------------------------
+
+-- Simple serialization: "id:count;id2:count2;"
+function Inventory.save()
+    local m = gMarioStates[0] -- Local save
+    local sTable = gPlayerSyncTable[m.playerIndex]
+
+    local saveStr = ""
+    for id, _ in pairs(_G.Inventory.items) do
+        local key = get_key(id)
+        local count = sTable[key]
+        if count and count > 0 then
+            saveStr = saveStr .. id .. ":" .. tostring(count) .. ";"
+        end
+    end
+
+    mod_storage_save("inventory_data", saveStr)
+    -- log_to_console("Saved Inventory: " .. saveStr)
+end
+
+function Inventory.load()
+    local m = gMarioStates[0]
+    local sTable = gPlayerSyncTable[m.playerIndex]
+
+    if not mod_storage_exists("inventory_data") then return end
+
+    local saveStr = mod_storage_load("inventory_data")
+    if not saveStr then return end
+
+    -- Parse "id:count;"
+    for pair in string.gmatch(saveStr, "([^;]+)") do
+        local id, countStr = string.match(pair, "([^:]+):(%d+)")
+        if id and countStr then
+            local count = tonumber(countStr)
+            if _G.Inventory.items[id] then
+                local key = get_key(id)
+                sTable[key] = count
+            end
+        end
+    end
+    -- log_to_console("Loaded Inventory")
 end

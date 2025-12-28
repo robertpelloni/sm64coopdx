@@ -4,7 +4,7 @@
 -- Test Data
 if _G.Inventory then
     -- Basic
-    Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 10)
+    Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 1000) -- Increased stack for economy
     Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
 
     -- Weapons
@@ -32,6 +32,16 @@ function on_give_item(msg)
     if msg == "speed" then id = "badge_speed" end
     if msg == "feather" then id = "badge_feather" end
     if msg == "health" then id = "badge_health" end
+    if msg == "save" then
+        Inventory.save()
+        djui_chat_message_create("Saved.")
+        return true
+    end
+    if msg == "load" then
+        Inventory.load()
+        djui_chat_message_create("Loaded.")
+        return true
+    end
 
     if _G.Inventory then
         Inventory.add_item(m, id, amount)
@@ -42,4 +52,35 @@ function on_give_item(msg)
     return true
 end
 
+-- Economy Logic
+local lastCoinCount = 0
+
+function economy_update(m)
+    if m.playerIndex ~= 0 then return end
+
+    -- Load on first frame (simplified init check)
+    if not _G.INVENTORY_LOADED then
+        Inventory.load()
+        _G.INVENTORY_LOADED = true
+        lastCoinCount = m.numCoins
+    end
+
+    -- Autosave every 30 seconds (30 * 30 frames)
+    if gGlobalTimer % 900 == 0 then
+        Inventory.save()
+    end
+
+    -- Coin Collection
+    if m.numCoins > lastCoinCount then
+        local diff = m.numCoins - lastCoinCount
+        Inventory.add_item(m, "coin_bag", diff)
+        lastCoinCount = m.numCoins
+    elseif m.numCoins < lastCoinCount then
+        -- Level reset or spent coins vanilla way?
+        -- Just update tracker, don't remove from bag
+        lastCoinCount = m.numCoins
+    end
+end
+
 hook_chat_command("give_item", "Give an item (test)", on_give_item)
+hook_event(HOOK_MARIO_UPDATE, economy_update)
