@@ -11,7 +11,6 @@ function act_hookshot_flying(m)
 
     -- Sync Check
     if not sTable.hookTargetX then
-        -- No target set, abort
         set_mario_action(m, ACT_JUMP_LAND, 0)
         return 1
     end
@@ -20,38 +19,52 @@ function act_hookshot_flying(m)
     local targetY = sTable.hookTargetY
     local targetZ = sTable.hookTargetZ
 
-    -- 1. Visuals
-    set_mario_animation(m, MARIO_ANIM_FORWARD_SCROLLING) -- Flying pose
-    -- TODO: Draw chain/rope
+    -- 1. Visuals: Render Chain
+    -- We need to draw from Mario (hand) to Target.
+    -- Ideally HOOK_ON_OBJECT_RENDER for 3D lines, but spawning particles is easier/standard in Lua mods.
+    -- Spawn particles along the line.
 
-    -- 2. Physics: Move towards target
     local dx = targetX - m.pos.x
     local dy = targetY - m.pos.y
     local dz = targetZ - m.pos.z
     local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
 
+    -- Spawn particles every 100 units
+    if m.playerIndex == 0 or dist > 200 then -- Optimization: Only render detail for local or if far? No, render all.
+        local steps = math.floor(dist / 100)
+        for i = 1, steps do
+            local t = i / steps
+            local px = m.pos.x + dx * t
+            local py = m.pos.y + dy * t + 60 -- Chest height
+            local pz = m.pos.z + dz * t
+
+            -- Spawn Sparkle (Non-synced, visual only)
+            spawn_non_sync_object(
+                id_bhvSparkleSpawn,
+                E_MODEL_SPARKLES,
+                px, py, pz,
+                nil
+            )
+        end
+    end
+
+    set_mario_animation(m, MARIO_ANIM_FORWARD_SCROLLING)
+
+    -- 2. Physics
     if dist < 100 then
-        -- Arrived
-        -- Bump up slightly to land
         m.vel.y = 30
         set_mario_action(m, ACT_JUMP_LAND, 0)
         return 1
     end
 
-    -- Normalize and apply speed
     m.vel.x = (dx / dist) * HOOK_SPEED
     m.vel.y = (dy / dist) * HOOK_SPEED
     m.vel.z = (dz / dist) * HOOK_SPEED
 
-    m.forwardVel = HOOK_SPEED -- For consistency
+    m.forwardVel = HOOK_SPEED
     m.faceAngle.y = atan2s(dz, dx)
 
     -- 3. Collision
-    -- We restrict full physics updates to local player OR we accept the simple linear path
-    -- Since we set velocity, perform_air_step will handle movement.
-    -- However, lag might cause desync if we rely purely on input.
-    -- Since we have a fixed target, both clients calculating the path is generally fine as long as target is synced.
-
     local step = perform_air_step(m, 0)
     if step == AIR_STEP_LANDED then
         set_mario_action(m, ACT_JUMP_LAND, 0)
@@ -67,15 +80,11 @@ end
 function hookshot_update(m)
     if m.playerIndex ~= 0 then return end
 
-    -- Input: Y Button
     if (m.controller.buttonPressed & Y_BUTTON) ~= 0 then
-        -- Check Inventory
         if not Inventory or Inventory.get_count(m, "hookshot") <= 0 then
             return
         end
 
-        -- Raycast
-        -- Start at eye height
         local startPos = {x = m.pos.x, y = m.pos.y + 150, z = m.pos.z}
 
         local cam = m.area.camera
@@ -88,21 +97,17 @@ function hookshot_update(m)
         local dirY = dy / mag
         local dirZ = dz / mag
 
-        -- Raycast
         local hitInfo = collision_find_surface_on_ray(
             startPos.x, startPos.y, startPos.z,
             dirX * HOOK_RANGE, dirY * HOOK_RANGE, dirZ * HOOK_RANGE
         )
 
         if hitInfo.surface then
-            -- Hit!
-            -- Sync Target
             local sTable = gPlayerSyncTable[m.playerIndex]
             sTable.hookTargetX = hitInfo.hitPos.x
             sTable.hookTargetY = hitInfo.hitPos.y
             sTable.hookTargetZ = hitInfo.hitPos.z
 
-            -- Start Action
             set_mario_action(m, ACT_HOOKSHOT_FLYING, 0)
             play_sound(SOUND_GENERAL_SWISH_AIR, m.marioObj.header.gfx.cameraToObject)
         else
@@ -111,7 +116,6 @@ function hookshot_update(m)
     end
 end
 
--- Crosshair Render
 function hookshot_hud()
     if not Inventory or Inventory.get_count(gMarioStates[0], "hookshot") <= 0 then return end
 
