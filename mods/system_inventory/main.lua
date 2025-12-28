@@ -2,13 +2,11 @@
 -- require statements removed as the mod loader handles file execution
 
 -- Test Data
--- We wrap this in a check or function to ensure api.lua has run,
--- but typically global definitions in api.lua run first if files are alphabetical or loaded sequentially.
--- However, safe programming: ensure Inventory exists.
-
 if _G.Inventory then
     Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 10)
     Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
+    Inventory.define_item("blaster", "Blaster", "Standard issue sidearm.", 1)
+    Inventory.define_item("wrench", "OmniWrench", "Fixes everything.", 1)
 end
 
 -- Chat Command for testing
@@ -18,6 +16,8 @@ function on_give_item(msg)
     local amount = 1
 
     if msg == "mushroom" then id = "mushroom" end
+    if msg == "blaster" then id = "blaster" end
+    if msg == "wrench" then id = "wrench" end
 
     if _G.Inventory then
         Inventory.add_item(m, id, amount)
