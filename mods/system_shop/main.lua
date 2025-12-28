@@ -8,6 +8,7 @@ local SHOP_ITEMS = {
     {id = "badge_feather", price = 150},
     {id = "badge_health", price = 200},
     {id = "blaster", price = 300},
+    {id = "totem_termite", price = 500},
 }
 local SELECTION = 1
 

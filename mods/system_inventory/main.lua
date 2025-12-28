@@ -16,6 +16,9 @@ if _G.Inventory then
     Inventory.define_item("badge_speed", "Badge: Agility", "Run 20% faster.", 1)
     Inventory.define_item("badge_feather", "Badge: Feather", "Fall slower.", 1)
     Inventory.define_item("badge_health", "Badge: Regen", "Regenerate health over time.", 1)
+
+    -- Transformations
+    Inventory.define_item("totem_termite", "Totem: Termite", "Transform into a bug.", 1)
 end
 
 -- Chat Command for testing
@@ -32,6 +35,7 @@ function on_give_item(msg)
     if msg == "speed" then id = "badge_speed" end
     if msg == "feather" then id = "badge_feather" end
     if msg == "health" then id = "badge_health" end
+    if msg == "totem" then id = "totem_termite" end
     if msg == "save" then
         Inventory.save()
         djui_chat_message_create("Saved.")
