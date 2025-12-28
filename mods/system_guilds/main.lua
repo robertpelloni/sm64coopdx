@@ -35,15 +35,29 @@ function guild_nametags()
         local m = gMarioStates[i]
         if m.marioBodyState.action & ACT_FLAG_ACTIVE ~= 0 then -- Connected?
             local sTable = gPlayerSyncTable[i]
-            if sTable and sTable.guildName then
+            if sTable then
                 local pos = {x = m.pos.x, y = m.pos.y + 200, z = m.pos.z}
                 local out = {x = 0, y = 0, z = 0}
 
                 if djui_hud_world_pos_to_screen_pos(pos, out) then
-                    local text = "<" .. sTable.guildName .. ">"
-                    local width = djui_hud_measure_text(text)
-                    djui_hud_set_color(100, 255, 100, 255) -- Light Green
-                    djui_hud_print_text(text, out.x - width/2, out.y, 1)
+                    local y = out.y
+
+                    -- Guild Name
+                    if sTable.guildName then
+                        local text = "<" .. sTable.guildName .. ">"
+                        local width = djui_hud_measure_text(text)
+                        djui_hud_set_color(100, 255, 100, 255) -- Light Green
+                        djui_hud_print_text(text, out.x - width/2, y, 1)
+                        y = y - 20
+                    end
+
+                    -- Title
+                    if sTable.currentTitle then
+                        local text = sTable.currentTitle
+                        local width = djui_hud_measure_text(text)
+                        djui_hud_set_color(255, 215, 0, 255) -- Gold
+                        djui_hud_print_text(text, out.x - width/2, y, 1)
+                    end
                 end
             end
         end
