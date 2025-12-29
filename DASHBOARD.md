@@ -9,13 +9,22 @@ The project structure is organized as follows:
     -   `src/game/`: Game logic and behaviors.
     -   `src/engine/`: Core engine components.
 -   **`mods/`**: Contains Lua mods for gameplay mechanics and systems.
-    -   `mods/mechanic_boost/`: Sonic Boost mechanic.
+    -   `mods/mechanic_boost/`: Sonic Boost mechanic (Speed/Meter).
     -   `mods/mechanic_glide/`: Spyro Glide mechanic.
     -   `mods/mechanic_hookshot/`: Hookshot mechanic.
     -   `mods/mechanic_possession/`: Entity Possession mechanic.
-    -   `mods/system_inventory/`: Universal Inventory system.
+    -   `mods/mechanic_telekinesis/`: Telekinesis mechanic (Psychonauts style).
+    -   `mods/mechanic_transformation/`: Transformation API (Banjo style).
+    -   `mods/mechanic_vehicle/`: Vehicle mechanic (Zoomer).
+    -   `mods/system_achievements/`: Achievements and Titles system.
+    -   `mods/system_guilds/`: Guild system and nametags.
+    -   `mods/system_inventory/`: Universal Inventory system and Economy.
+    -   `mods/system_optimization/`: Client-side interest management/culling.
     -   `mods/system_perks/`: Perks/Badges system.
+    -   `mods/system_quests/`: Quest system API and tracker.
+    -   `mods/system_shop/`: NPC Shop system.
     -   `mods/system_weapon_wheel/`: Weapon Wheel UI.
+    -   `mods/system_world/`: Connected World (Portals).
 -   **`include/`**: Header files.
 -   **`levels/`**: Level data and scripts.
 -   **`actors/`**: Actor data and models.
