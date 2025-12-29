@@ -25,12 +25,16 @@ function inventory_ui_render()
     end
 end
 
+function Inventory.toggle_ui()
+    UI_VISIBLE = not UI_VISIBLE
+end
+
 function inventory_input(m)
     if m.playerIndex ~= 0 then return end -- Local player only
 
-    -- Toggle with D-Pad Up
+    -- Toggle with D-Pad Up (Keep shortcut)
     if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        UI_VISIBLE = not UI_VISIBLE
+        Inventory.toggle_ui()
     end
 end
 

@@ -1,4 +1,7 @@
+local UI_VISIBLE = false
+
 function quest_ui_render()
+    if not UI_VISIBLE then return end
     if not Quest then return end
 
     local m = gMarioStates[0]
@@ -20,6 +23,10 @@ function quest_ui_render()
 
         y = y + 50
     end
+end
+
+function Quest.toggle_ui()
+    UI_VISIBLE = not UI_VISIBLE
 end
 
 hook_event(HOOK_ON_HUD_RENDER, quest_ui_render)
