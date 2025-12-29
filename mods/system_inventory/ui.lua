@@ -29,14 +29,14 @@ function Inventory.toggle_ui()
     UI_VISIBLE = not UI_VISIBLE
 end
 
-function inventory_input(m)
-    if m.playerIndex ~= 0 then return end -- Local player only
-
-    -- Toggle with D-Pad Up (Keep shortcut)
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        Inventory.toggle_ui()
-    end
+function Inventory.is_open()
+    return UI_VISIBLE
 end
 
+function Inventory.close_ui()
+    UI_VISIBLE = false
+end
+
+-- Input handling removed. Toggling is now handled by system_menu.
+
 hook_event(HOOK_ON_HUD_RENDER, inventory_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, inventory_input)

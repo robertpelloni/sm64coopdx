@@ -4,11 +4,12 @@
 local MENU_OPEN = false
 local SELECTION = 1
 local OPTIONS = {
+    {name = "Resume", action = function() MENU_OPEN = false end},
     {name = "Inventory", action = function() if _G.Inventory and _G.Inventory.toggle_ui then _G.Inventory.toggle_ui() end end},
     {name = "Quests", action = function() if _G.Quest and _G.Quest.toggle_ui then _G.Quest.toggle_ui() end end},
-    {name = "Classes", action = function() djui_chat_message_create("Use /class [name] for now.") end}, -- Placeholder sub-menu
-    {name = "Guild", action = function() djui_chat_message_create("Use /guild [create|join] for now.") end}, -- Placeholder sub-menu
-    {name = "Close", action = function() MENU_OPEN = false set_mario_action(gMarioStates[0], ACT_IDLE, 0) end}
+    {name = "Classes", action = function() djui_chat_message_create("Use /class [name] for now.") end},
+    {name = "Guild", action = function() djui_chat_message_create("Use /guild [create|join] for now.") end},
+    {name = "Close", action = function() MENU_OPEN = false end}
 }
 
 function menu_render()
@@ -20,7 +21,7 @@ function menu_render()
     local cy = h / 2
 
     -- Background
-    djui_hud_set_color(0, 0, 50, 200) -- Dark Blue
+    djui_hud_set_color(0, 0, 50, 200)
     djui_hud_render_rect(cx - 100, cy - 100, 200, 200)
 
     -- Title
@@ -48,14 +49,24 @@ function menu_update(m)
     if (m.controller.buttonDown & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
         MENU_OPEN = not MENU_OPEN
         if MENU_OPEN then
-            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0) -- Freeze
+            -- Close overlapping UIs
+            if _G.Inventory and _G.Inventory.close_ui then _G.Inventory.close_ui() end
+            if _G.Quest and _G.Quest.toggle_ui then -- Quest UI doesn't have close_ui yet, toggle if open?
+                -- Ideally Quest UI logic should be smarter.
+                -- For now, just open main menu.
+            end
+            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
         else
             set_mario_action(m, ACT_IDLE, 0)
         end
-        return -- Consume input
+        return
     end
 
-    if not MENU_OPEN then return end
+    if not MENU_OPEN then
+        -- If menu is closed, ensure we aren't stuck in dialog state if we were the ones who set it?
+        -- No, other things use that state.
+        return
+    end
 
     -- Navigation
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
@@ -72,18 +83,24 @@ function menu_update(m)
         local opt = OPTIONS[SELECTION]
         if opt and opt.action then
             opt.action()
-            -- Close menu after action? Or stay open?
-            -- Usually stay open unless "Close".
-            -- But Inventory UI might overlay.
-            -- Let's close main menu if opening another UI.
-            if opt.name == "Inventory" or opt.name == "Quests" then
+            -- Close Main Menu if opening a subsystem UI to avoid clutter
+            if opt.name == "Inventory" or opt.name == "Quests" or opt.name == "Resume" or opt.name == "Close" then
                 MENU_OPEN = false
+                if opt.name == "Resume" or opt.name == "Close" then
+                    set_mario_action(m, ACT_IDLE, 0)
+                end
             end
         end
     end
 
-    -- Force freeze
-    if m.action ~= ACT_WAITING_FOR_DIALOG then
+    -- Back
+    if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+        MENU_OPEN = false
+        set_mario_action(m, ACT_IDLE, 0)
+    end
+
+    -- Force freeze while open
+    if MENU_OPEN and m.action ~= ACT_WAITING_FOR_DIALOG then
         set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
     end
 end

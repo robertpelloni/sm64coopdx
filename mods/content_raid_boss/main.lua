@@ -75,8 +75,8 @@ function bhv_king_whomp_loop(o)
         end
     end
 
-    -- Only Authority (Player 0 or Server) drives AI
-    if gMarioStates[0].playerIndex ~= 0 then return end
+    -- Only Authority (Server) drives AI to prevent desync fighting
+    if not network_is_server() then return end
 
     -- AI Logic
     if o.oAction == 0 then -- Idle / Phase Check
