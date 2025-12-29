@@ -67,7 +67,13 @@ To support "thousands of players" and persistent worlds, the architecture must s
 2.  **Dedicated Server Architecture:** **Pending.** Requires C Engine rewrite.
 3.  **Instancing:** **Implemented (Lua Prototype).** `mods/system_instancing` allows dimension switching.
 
+### Phase 4: Content Depth (The "Game" Loop)
+*Status: **Implemented (Pilot Phase)**.*
+1.  **Raid Bosses:** **Implemented.** `mods/content_raid_boss` (King Whomp).
+2.  **Dungeons:** **Planned.**
+3.  **Classes:** **Planned** (via Badges).
+
 ---
 
-## Current Status: Phase 3 Implemented
-We have successfully implemented pilot versions of mechanics, systems, and network architecture logic required for the MMORPG vision. The project now features a complete loop of progression, exploration, and social interaction.
+## Current Status: Phase 4 Implemented
+We have successfully implemented pilot versions of mechanics, systems, network architecture, and endgame content required for the MMORPG vision. The project now features a complete loop of progression, exploration, social interaction, and combat challenges.
