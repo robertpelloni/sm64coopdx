@@ -18,6 +18,7 @@ The project structure is organized as follows:
     -   `mods/mechanic_vehicle/`: Vehicle mechanic (Zoomer).
     -   `mods/system_achievements/`: Achievements and Titles system.
     -   `mods/system_guilds/`: Guild system and nametags.
+    -   `mods/system_instancing/`: Instancing system (Dimensions).
     -   `mods/system_inventory/`: Universal Inventory system and Economy.
     -   `mods/system_optimization/`: Client-side interest management/culling.
     -   `mods/system_perks/`: Perks/Badges system.
