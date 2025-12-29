@@ -13,6 +13,13 @@ local WorldLinks = {
         src = {level = LEVEL_BOB, area = 1, x = 0, y = 0, z = 0}, -- Start point
         dest = {level = LEVEL_CASTLE_GROUNDS, area = 1, nodeId = 1},
         name = "Castle Grounds"
+    },
+    -- Castle Courtyard -> Dungeon (BBH)
+    {
+        src = {level = LEVEL_CASTLE_COURTYARD, area = 1, x = 0, y = 0, z = -1000},
+        dest = {level = LEVEL_BBH, area = 1, nodeId = 1},
+        name = "Crypt of the Vanished (Dungeon)",
+        isDungeon = true -- Custom flag
     }
 }
 
@@ -32,20 +39,19 @@ function bhv_portal_loop(o)
     -- Interaction
     local m = gMarioStates[0]
     if dist_between_objects(o, m.marioObj) < 100 then
-        -- Warp!
-        -- o.oBehParams stores index in WorldLinks?
-        -- We can store index in oBehParams2ndByte
         local idx = o.oBehParams2ndByte
         local link = WorldLinks[idx]
 
         if link then
             djui_chat_message_create("Warping to " .. link.name)
-            -- warp_to_level(level, area, actId) -> actId?
-            -- smlua warp_to_level takes (level, area, act)
-            -- We want to go to a warp NODE usually.
-            -- warp_to_warpnode(level, area, act, warpNode)
 
-            -- Let's use initiate_warp(level, area, warpNode, 0)
+            if link.isDungeon then
+                -- Generate Instance
+                local sTable = gPlayerSyncTable[0]
+                sTable.instanceID = math.random(1000, 9999)
+                _G.PENDING_DUNGEON_SPAWN = true -- Flag for content_dungeon
+            end
+
             initiate_warp(link.dest.level, link.dest.area, link.dest.nodeId, 0)
         end
     end
@@ -58,8 +64,6 @@ function world_init()
     local m = gMarioStates[0]
     local currLvl = gNetworkPlayers[m.playerIndex].currLevelNum
     local currArea = gNetworkPlayers[m.playerIndex].currAreaIndex
-
-    -- Clear existing? Engine handles cleanup on level change.
 
     for i, link in ipairs(WorldLinks) do
         if link.src.level == currLvl and link.src.area == currArea then
