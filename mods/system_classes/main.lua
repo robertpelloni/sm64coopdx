@@ -2,7 +2,7 @@
 
 -- Custom Actions for Abilities
 local ACT_CLASS_ABILITY_1 = allocate_mario_action(ACT_GROUP_ATTACKING | ACT_FLAG_ATTACKING | ACT_FLAG_MOVING)
-local ACT_CLASS_ABILITY_2 = allocate_mario_action(ACT_GROUP_ATTACKING | ACT_FLAG_ATTACKING) -- Stationary? Or Moving? Let's make it flexible.
+local ACT_CLASS_ABILITY_2 = allocate_mario_action(ACT_GROUP_ATTACKING | ACT_FLAG_ATTACKING)
 
 -- Helper to get active class def
 local function get_active_def(m)
@@ -17,11 +17,6 @@ function act_class_ability_1(m)
         set_mario_action(m, ACT_IDLE, 0)
         return 1
     end
-
-    -- Delegate to class specific function
-    -- The function should return 1 if action is finished, 0 if continuing.
-    -- If it returns nothing, we assume it's ongoing until we manually switch?
-    -- Safe pattern: Pass `m` and `step` info.
     return def.ability1(m)
 end
 
@@ -45,29 +40,35 @@ function class_input_update(m)
     if not def then return end
 
     -- Check Inputs
-    -- Ability 1: X Button (Replaces Boost if Class active? Or maybe another button?)
-    -- Let's use X for Ability 1. If Class is set, Boost mechanic might conflict.
-    -- We should check if Boost allows it.
-    -- Ideally, "Class" overrides "Boost".
 
     if (m.controller.buttonPressed & X_BUTTON) ~= 0 then
-        -- Check cooldown? (Not implemented yet, but good for future)
         if def.ability1 then
+            -- Combat Check
+            if Combat then
+                if Combat.is_on_cooldown(m, "ab1") then
+                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                    return
+                end
+                if not Combat.use_mana(m, 20) then return end
+                Combat.start_cooldown(m, "ab1", 60) -- 2 seconds default
+            end
+
             set_mario_action(m, ACT_CLASS_ABILITY_1, 0)
         end
     end
 
-    -- Ability 2: Y Button (Replaces Hookshot?)
-    -- Y is used for Hookshot.
-    -- Conflict resolution: If Hookshot item equipped?
-    -- Maybe classes use D-Pad? Or L/R?
-    -- Let's use R_TRIG (Telekinesis conflict) or L_TRIG (Weapon Wheel conflict).
-    -- Actually, simpler: Button combos? Z + A?
-    -- Let's stick to X and Y for now. If you have a Class, it takes priority over generic tools like Hookshot/Boost?
-    -- Or we allow Hookshot if Ability 2 is nil.
-
     if (m.controller.buttonPressed & Y_BUTTON) ~= 0 then
         if def.ability2 then
+            -- Combat Check
+            if Combat then
+                if Combat.is_on_cooldown(m, "ab2") then
+                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                    return
+                end
+                if not Combat.use_mana(m, 40) then return end
+                Combat.start_cooldown(m, "ab2", 150) -- 5 seconds
+            end
+
             set_mario_action(m, ACT_CLASS_ABILITY_2, 0)
         end
     end
