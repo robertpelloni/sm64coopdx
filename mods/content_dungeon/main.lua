@@ -29,17 +29,6 @@ function bhv_dungeon_master_init(o)
     network_init_object(o, true, {"oBehParams", "oBehParams2ndByte"})
 end
 
-function bhv_dungeon_master_loop(o)
-    -- Client side effects
-    if o.oBehParams >= ROOM_1_BOO_COUNT and o.oBehParams2ndByte == 0 then
-        o.oBehParams2ndByte = 1 -- Room 2 unlock
-        djui_chat_message_create("Room 1 Cleared! The path opens...")
-        play_puzzle_jingle()
-    end
-end
-
-local id_bhvDungeonMaster = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_dungeon_master_init, bhv_dungeon_master_loop)
-
 -- Helper to count boos
 function count_remaining_boos()
     local count = 0
@@ -55,37 +44,29 @@ function count_remaining_boos()
     return count
 end
 
-function dungeon_update(m)
-    -- Only run logic if we are in the dungeon
-    if gNetworkPlayers[m.playerIndex].currLevelNum ~= DUNGEON_LEVEL then return end
-    if m.playerIndex ~= 0 then return end -- Local authority checks logic, but Server (or Host) updates Master Object
-
-    -- We need to find the DM object
-    local dmObj = nil
-    local obj = obj_get_first(OBJ_LIST_GENACTOR)
-    while obj do
-        if obj.behavior == id_bhvDungeonMaster then
-            dmObj = obj
-            break
-        end
-        obj = obj_get_next(obj)
-    end
-
-    if not dmObj then return end
-
-    if network_is_server() then
-        if dmObj.oBehParams2ndByte == 0 then -- Room 1 active
+function bhv_dungeon_master_loop(o)
+    -- Logic runs on all clients, but state updates should be authority-driven.
+    -- If we own the object (Host or Spawner), we check for completion.
+    if network_owns_object(o) then
+         if o.oBehParams2ndByte == 0 then -- Room 1 active
             local currentBoos = count_remaining_boos()
             local kills = ROOM_1_BOO_COUNT - currentBoos
 
-            if kills > dmObj.oBehParams then
-                dmObj.oBehParams = kills
+            if kills > o.oBehParams then
+                o.oBehParams = kills
             end
         end
     end
+
+    -- Client side effects (Synced State)
+    if o.oBehParams >= ROOM_1_BOO_COUNT and o.oBehParams2ndByte == 0 then
+        o.oBehParams2ndByte = 1 -- Room 2 unlock
+        djui_chat_message_create("Room 1 Cleared! The path opens...")
+        play_puzzle_jingle()
+    end
 end
 
-hook_event(HOOK_MARIO_UPDATE, dungeon_update)
+local id_bhvDungeonMaster = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_dungeon_master_init, bhv_dungeon_master_loop)
 
 -- Entrance Command
 function on_dungeon_enter(msg)

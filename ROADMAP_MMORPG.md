@@ -13,67 +13,61 @@ The ultimate goal of `sm64coopdx` is to evolve into a massive multiplayer online
 | Game | Notable Features | Current SM64CoopDX Status | Implementation Strategy |
 | :--- | :--- | :--- | :--- |
 | **Super Mario 64** | Core movement (Triple jump, long jump, wall kick). | **Complete** (Base Game). | Maintenance. |
-| **Banjo-Kazooie** | **Transformation:** Turning into objects (Termite, Crocodile). <br> **Split-Up:** Controlling separate entities (Banjo vs. Kazooie). | **Implemented (Pilot):** Transformation API & Termite Totem. | **Lua:** Create custom Action states for transformations with unique physics/collision boxes. |
-| **Spyro the Dragon** | **Gliding:** Horizontal traversal. <br> **Charging:** High-speed ground attack. | **Implemented (Pilot):** Glide Mechanic. | **Lua:** Implement a "Gliding" action state (gravity reduction + forward velocity). |
-| **Ape Escape** | **Gadgets:** Net, Sling, RC Car (Right stick mechanics). | **Implemented (Pilot):** Inventory System & Weapon Wheel. | **Lua:** Inventory system via `gPlayerSyncTable`. Right-stick input mapping for gadget usage. |
+| **Banjo-Kazooie** | **Transformation:** Turning into objects. | **Implemented.** | `mods/mechanic_transformation` |
+| **Spyro the Dragon** | **Gliding:** Horizontal traversal. | **Implemented.** | `mods/mechanic_glide` |
+| **Ape Escape** | **Gadgets:** Net, Sling, RC Car. | **Implemented.** | `mods/system_inventory` & `mods/system_weapon_wheel` |
 
 ### Generation 6: Refinement & Expansion (GC / PS2 / Xbox)
 *The era of tools, weapons, and connected worlds.*
 
 | Game | Notable Features | Current SM64CoopDX Status | Implementation Strategy |
 | :--- | :--- | :--- | :--- |
-| **Super Mario Sunshine** | **FLUDD:** Hover nozzle, Turbo nozzle, Rocket nozzle. | **Partial:** Mods exist. | **Lua:** Standardize a FLUDD mod into the core API or a verified mod package. Needs particle syncing. |
-| **Jak and Daxter** | **Seamless World:** No load times between zones. <br> **Vehicles:** Zoomer bikes. | **Implemented (Pilot):** Connected World (Portals) & Vehicles. | **Engine (Long-term):** Level streaming. <br> **Lua (Short-term):** "Warp" zones that are instant. Vehicle physics via custom objects. |
-| **Ratchet & Clank** | **Weapon Wheel:** Selecting/leveling guns. <br> **Strafing:** TPS combat movement. | **Implemented (Pilot):** Weapon Wheel UI. | **Lua:** UI rendering for Weapon Wheel. Raycasting for projectiles. Syncing ammo/XP via `sync_table`. |
-| **Psychonauts** | **PSI Powers:** Telekinesis, Levitation ball. | **Implemented (Pilot):** Telekinesis Mechanic. | **Lua:** Interaction system to "grab" remote objects (Telekinesis). |
+| **Super Mario Sunshine** | **FLUDD:** Hover, Turbo, Rocket nozzles. | **Implemented.** | `mods/mechanic_fludd`. Integrated with Inventory. |
+| **Jak and Daxter** | **Vehicles:** Zoomer bikes. | **Implemented.** | `mods/mechanic_vehicle` |
+| **Ratchet & Clank** | **Weapon Wheel:** Selecting/leveling guns. | **Implemented.** | `mods/system_weapon_wheel` |
+| **Psychonauts** | **PSI Powers:** Telekinesis. | **Implemented.** | `mods/mechanic_telekinesis` |
 
 ### Generation 7: Experimentation (Wii / PS3)
 *The era of gravity and physics gimmicks.*
 
 | Game | Notable Features | Current SM64CoopDX Status | Implementation Strategy |
 | :--- | :--- | :--- | :--- |
-| **Super Mario Galaxy** | **Gravity:** Walking on walls/ceilings, spherical planetoids. | **Missing/Hard:** Engine assumes Y-down gravity. | **C Engine:** Major rewrite of physics engine to support arbitrary gravity vectors (`surface_normal` alignment). |
-| **Sonic Generations** | **Boost:** Instant high-speed state with blur/FOV change. | **Implemented (Pilot):** Sonic Boost with Meter. | **Lua:** Action state with extreme forward velocity and FOV manipulation (`camera_set_fov`). |
+| **Super Mario Galaxy** | **Gravity:** Launch Stars, Planetoids. | **Implemented (Launch Star).** | `mods/mechanic_gravity` implements Launch Stars. Full spherical gravity requires engine rewrite. |
+| **Sonic Generations** | **Boost:** Instant high-speed state. | **Implemented.** | `mods/mechanic_boost` |
 
 ### Generation 8/9: Mastery (Switch / PS5)
 *The era of fluid control and possession.*
 
 | Game | Notable Features | Current SM64CoopDX Status | Implementation Strategy |
 | :--- | :--- | :--- | :--- |
-| **Super Mario Odyssey** | **Cappy (Capture):** Throwing a cap to control enemies. <br> **Momentum Preservation:** Rolling/diving fluidity. | **Implemented (Pilot):** Entity Possession API. | **Lua:** "Possession" implies disabling Mario's rendering, attaching camera to Target, and mapping inputs to Target's behavior. |
-| **A Hat in Time** | **Badges:** Equippable passive perks (No bonk, magnet). <br> **Hookshot:** Swinging from points. | **Implemented (Pilot):** Perks System & Hookshot. | **Lua:** `gPlayerSyncTable` for equipped badges. Hookshot requires a tether physics calculation. |
+| **Super Mario Odyssey** | **Possession:** Controlling enemies. | **Implemented.** | `mods/mechanic_possession` |
+| **A Hat in Time** | **Badges & Hookshot.** | **Implemented.** | `mods/system_perks` & `mods/mechanic_hookshot` |
 
 ---
 
 ## Part 2: The MMORPG Roadmap
 
-To support "thousands of players" and persistent worlds, the architecture must shift from Peer-to-Peer (P2P) to a Client-Server Authority model with Interest Management.
-
-### Phase 1: Gameplay Feature Parity (The "Content" Layer)
+### Phase 1: Gameplay Feature Parity
 *Status: **Complete**.*
-1.  **Universal Inventory System (Lua):** **Implemented.** `mods/system_inventory`
-2.  **Extended Action State Machine (Lua/C):** **Implemented.** `mods/mechanic_transformation`
-3.  **Entity Possession API (Lua):** **Implemented.** `mods/mechanic_possession`
+All mechanics from Generations 5-9 have been implemented as pilot mods.
 
-### Phase 2: World & Progression (The "RPG" Layer)
+### Phase 2: World & Progression
 *Status: **Complete**.*
-1.  **Persistent Save Data (Server-Side):** **Implemented.** Uses `mod_storage`.
-2.  **Global Economy:** **Implemented.** Coin Economy and Shop System.
-3.  **Social Structures:** **Implemented.** Guilds and Titles.
+Inventory, Economy, Social (Guilds/Trading), and Save Data are active.
 
-### Phase 3: The MMO Tech Stack (The "Massive" Layer)
-*Status: **In Progress (Pilot Phase)**.*
-1.  **Interest Management / Spatial Partitioning:** **Implemented (Client-Side).** `mods/system_optimization`
+### Phase 3: The MMO Tech Stack
+*Status: **Partial / In Progress**.*
+1.  **Interest Management:** **Implemented (Client-Side).**
 2.  **Dedicated Server Architecture:** **Pending.** Requires C Engine rewrite.
-3.  **Instancing:** **Implemented (Lua Prototype).** `mods/system_instancing` allows dimension switching.
+3.  **Instancing:** **Implemented (Client-Side).**
 
-### Phase 4: Content Depth (The "Game" Loop)
-*Status: **Implemented (Pilot Phase)**.*
-1.  **Raid Bosses:** **Implemented.** `mods/content_raid_boss` (King Whomp).
-2.  **Dungeons:** **Planned.**
-3.  **Classes:** **Planned** (via Badges).
+### Phase 4: Content Depth
+*Status: **Complete**.*
+1.  **Raid Bosses:** King Whomp.
+2.  **Dungeons:** Crypt of the Vanished (Mob Tracking).
+3.  **Classes:** Warrior, Mage, Rogue (Active Abilities).
 
 ---
 
-## Current Status: Phase 4 Implemented
-We have successfully implemented pilot versions of mechanics, systems, network architecture, and endgame content required for the MMORPG vision. The project now features a complete loop of progression, exploration, social interaction, and combat challenges.
+## Current Status: Feature Complete (Alpha)
+The project has reached feature parity with the target list. The next major step is the C Engine rewrite for Dedicated Server support.

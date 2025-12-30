@@ -10,7 +10,9 @@ The project structure is organized as follows:
     -   `src/engine/`: Core engine components.
 -   **`mods/`**: Contains Lua mods for gameplay mechanics and systems.
     -   `mods/mechanic_boost/`: Sonic Boost mechanic (Speed/Meter).
+    -   `mods/mechanic_fludd/`: FLUDD mechanic (Hover/Rocket/Turbo).
     -   `mods/mechanic_glide/`: Spyro Glide mechanic.
+    -   `mods/mechanic_gravity/`: Launch Star mechanic (Galaxy).
     -   `mods/mechanic_hookshot/`: Hookshot mechanic.
     -   `mods/mechanic_possession/`: Entity Possession mechanic.
     -   `mods/mechanic_telekinesis/`: Telekinesis mechanic (Psychonauts style).
@@ -45,5 +47,5 @@ See `ROADMAP_MMORPG.md` for the detailed plan and feature breakdown.
 
 ## Version Information
 
-Current Version: `v1.6` (Internal Version: 43)
+Current Version: `v1.7` (Internal Version: 44)
 See `src/pc/network/version.h`.

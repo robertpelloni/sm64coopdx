@@ -22,8 +22,9 @@ function on_trade_command(msg)
     end
 
     -- Check if they already requested us
+    local m = gMarioStates[0]
     local theirState = gPlayerSyncTable[targetIdx]
-    if theirState.tradePartner == 0 and theirState.tradeStatus == Trade.STATE_REQUEST_SENT then
+    if theirState.tradePartner == m.playerIndex and theirState.tradeStatus == Trade.STATE_REQUEST_SENT then
         Trade.accept(targetIdx)
     else
         Trade.request(targetIdx)

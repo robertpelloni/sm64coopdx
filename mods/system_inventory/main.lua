@@ -12,6 +12,11 @@ if _G.Inventory then
     Inventory.define_item("wrench", "OmniWrench", "Fixes everything.", 1)
     Inventory.define_item("hookshot", "Hookshot", "Grapple to distant surfaces.", 1)
 
+    -- FLUDD Nozzles
+    Inventory.define_item("nozzle_hover", "Hover Nozzle", "Provides aerial lift.", 1)
+    Inventory.define_item("nozzle_rocket", "Rocket Nozzle", "Launch high into the air.", 1)
+    Inventory.define_item("nozzle_turbo", "Turbo Nozzle", "Move at high speeds.", 1)
+
     -- Badges
     Inventory.define_item("badge_speed", "Badge: Agility", "Run 20% faster.", 1)
     Inventory.define_item("badge_feather", "Badge: Feather", "Fall slower.", 1)
@@ -42,6 +47,11 @@ function on_give_item(msg)
     if msg == "wing" then id = "badge_wing" end
     if msg == "totem" then id = "totem_termite" end
     if msg == "goomba" then id = "totem_goomba" end
+
+    -- FLUDD
+    if msg == "hover" then id = "nozzle_hover" end
+    if msg == "rocket" then id = "nozzle_rocket" end
+    if msg == "turbo" then id = "nozzle_turbo" end
 
     if msg == "save" then
         Inventory.save()

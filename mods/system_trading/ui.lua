@@ -23,12 +23,6 @@ function TradeUI.render()
 
         local pTable = gPlayerSyncTable[partnerIdx]
 
-        -- Check for completion
-        if sTable.tradeStatus == Trade.STATE_CONFIRMED and pTable.tradeStatus == Trade.STATE_CONFIRMED then
-            Trade.finalize(m.playerIndex, partnerIdx)
-            return
-        end
-
         -- Draw Window
         local screenWidth = djui_hud_get_screen_width()
         local screenHeight = djui_hud_get_screen_height()
@@ -98,6 +92,16 @@ function TradeUI.input(m)
         -- Lock movement
         m.freeze = 1
     elseif sTable.tradeStatus == Trade.STATE_CONFIRMED then
+        -- Check for completion logic here (Input loop instead of Render loop)
+        local partnerIdx = sTable.tradePartner
+        if partnerIdx ~= -1 and gNetworkPlayers[partnerIdx].connected then
+            local pTable = gPlayerSyncTable[partnerIdx]
+            if pTable.tradeStatus == Trade.STATE_CONFIRMED then
+                Trade.finalize(m.playerIndex, partnerIdx)
+                return
+            end
+        end
+
         if m.controller.buttonPressed & B_BUTTON ~= 0 then
             sTable.tradeStatus = Trade.STATE_TRADING -- Unconfirm
         end

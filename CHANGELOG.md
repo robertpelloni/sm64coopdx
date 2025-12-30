@@ -1,26 +1,30 @@
 # Changelog
 
-## v1.6 (Current)
-- **Phase 4 Completion**: Implemented final Pilot Systems.
-- **Classes**: Added Warrior, Mage, and Rogue classes with active abilities (Fireball, Teleport, Bash, etc.).
-- **Trading**: Added Player-to-Player secure coin trading system.
-- **Social**: Added Guild Chat and private channels.
-- **Dungeons**: Refined "Crypt of the Vanished" with mob kill tracking and room unlocking logic.
-- **Refinement**: Added collision safety to Teleport, fixed input conflicts between Menus and Abilities.
+## v1.7 (Current)
+- **Feature Parity Complete**: Implemented final missing mechanics from roadmap.
+- **FLUDD**: Added Hover, Rocket, and Turbo nozzles with water management and inventory integration.
+- **Gravity**: Added Launch Stars representing Super Mario Galaxy mechanics.
+- **Documentation**: Updated Roadmap to reflect 100% completion of Pilot Mechanics.
+
+## v1.6
+- **Classes**: Added Warrior, Mage, Rogue with active abilities.
+- **Trading**: Added P2P Coin Trading.
+- **Guilds**: Added Guild Chat.
+- **Dungeons**: Refined mob logic.
 
 ## v1.5
-- **Raid Boss**: Added King Whomp encounter with phases.
+- **Raid Boss**: Added King Whomp.
 - **Instancing**: Added dimension switching.
-- **Optimization**: Added client-side interest management.
+- **Optimization**: Added client-side culling.
 
 ## v1.4
-- **Social**: Added Guilds (Nametags) and Titles.
-- **World**: Added Connected World portals and Shop System.
+- **Social**: Guilds & Titles.
+- **World**: Portals & Shops.
 
 ## v1.3
-- **Mechanics**: Added Possession, Vehicles, and Transformations.
-- **Systems**: Added Universal Inventory and Quests.
+- **Mechanics**: Possession, Vehicles, Transformation.
+- **Systems**: Inventory, Quests.
 
 ## v1.2
-- **Mechanics**: Added Spyro Glide, Sonic Boost, Hookshot, Telekinesis.
-- **UI**: Added Weapon Wheel and Perks.
+- **Mechanics**: Glide, Boost, Hookshot, Telekinesis.
+- **UI**: Weapon Wheel, Perks.

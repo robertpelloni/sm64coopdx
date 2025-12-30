@@ -38,7 +38,13 @@ function FLUDD.refill(m)
     s.fluddWater = FLUDD.MAX_WATER
 end
 
--- Integration with Inventory (Check equipped nozzle)
--- For this pilot, we'll assume having the item in inventory allows switching to it.
--- Or we can just have a command /fludd [type].
--- Let's use the Weapon Wheel logic later, for now: Command or Item Check.
+-- Integration with Inventory
+function FLUDD.has_nozzle(m, type)
+    if not _G.Inventory then return true end -- Fallback if inventory system missing
+
+    local item = "nozzle_hover"
+    if type == FLUDD.NOZZLE_ROCKET then item = "nozzle_rocket" end
+    if type == FLUDD.NOZZLE_TURBO then item = "nozzle_turbo" end
+
+    return Inventory.get_count(m, item) > 0
+end

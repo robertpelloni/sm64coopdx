@@ -13,6 +13,20 @@ Classes.TYPE_ROGUE = 3
 local COOLDOWN_ABILITY_1 = 30 * 5 -- 5 seconds
 local COOLDOWN_ABILITY_2 = 30 * 10 -- 10 seconds
 
+-- Local state for cooldowns (indexed by playerIndex)
+local ClassState = {}
+
+-- Helper to get/init state
+local function get_class_state(playerIndex)
+    if not ClassState[playerIndex] then
+        ClassState[playerIndex] = {
+            cd1 = 0,
+            cd2 = 0
+        }
+    end
+    return ClassState[playerIndex]
+end
+
 -- Define Classes
 Classes.defs = {
     [Classes.TYPE_WARRIOR] = {
@@ -41,10 +55,6 @@ Classes.defs = {
     }
 }
 
--- Actions
-local ACT_CLASS_ABILITY_1 = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_ATTACKING)
-local ACT_CLASS_ABILITY_2 = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_INTANGIBLE)
-
 function Classes.set_class(m, type)
     local sTable = gPlayerSyncTable[m.playerIndex]
     sTable.classType = type
@@ -54,9 +64,6 @@ function Classes.set_class(m, type)
         djui_chat_message_create("Class set to: " .. def.name)
     end
 end
-
--- Hook into Physics (Perks system already handles generic speed/hp, but let's override here for specificity)
--- Actually, let's keep it simple and just handle Abilities for this pilot.
 
 function classes_update(m)
     if m.playerIndex ~= 0 then return end
@@ -70,27 +77,26 @@ function classes_update(m)
     if cType == 0 then return end
 
     -- Cooldown Management (Local)
-    if not m.classCooldown1 then m.classCooldown1 = 0 end
-    if not m.classCooldown2 then m.classCooldown2 = 0 end
+    local cs = get_class_state(m.playerIndex)
 
-    if m.classCooldown1 > 0 then m.classCooldown1 = m.classCooldown1 - 1 end
-    if m.classCooldown2 > 0 then m.classCooldown2 = m.classCooldown2 - 1 end
+    if cs.cd1 > 0 then cs.cd1 = cs.cd1 - 1 end
+    if cs.cd2 > 0 then cs.cd2 = cs.cd2 - 1 end
 
     -- Ability 1 Input
-    if m.controller.buttonPressed & L_JPAD ~= 0 and m.classCooldown1 == 0 then
+    if m.controller.buttonPressed & L_JPAD ~= 0 and cs.cd1 == 0 then
         -- Trigger Ability 1
-        perform_ability_1(m, cType)
+        perform_ability_1(m, cType, cs)
     end
 
     -- Ability 2 Input
-    if m.controller.buttonPressed & R_JPAD ~= 0 and m.classCooldown2 == 0 then
+    if m.controller.buttonPressed & R_JPAD ~= 0 and cs.cd2 == 0 then
         -- Trigger Ability 2
-        perform_ability_2(m, cType)
+        perform_ability_2(m, cType, cs)
     end
 end
 
-function perform_ability_1(m, type)
-    m.classCooldown1 = COOLDOWN_ABILITY_1
+function perform_ability_1(m, type, cs)
+    cs.cd1 = COOLDOWN_ABILITY_1
 
     if type == Classes.TYPE_MAGE then
         -- Fireball
@@ -113,8 +119,8 @@ function perform_ability_1(m, type)
     end
 end
 
-function perform_ability_2(m, type)
-    m.classCooldown2 = COOLDOWN_ABILITY_2
+function perform_ability_2(m, type, cs)
+    cs.cd2 = COOLDOWN_ABILITY_2
 
     if type == Classes.TYPE_MAGE then
         -- Teleport (Blink forward)
@@ -126,19 +132,13 @@ function perform_ability_2(m, type)
         m.pos.z = m.pos.z + dist * math.cos(m.faceAngle.y / 0x8000 * math.pi)
 
         -- Collision Safety Check
-        local floor = resolve_and_return_wall_collisions(m.pos, 100, 50)
-        -- Actually `resolve_and_return_wall_collisions` modifies pos directly and returns floor height?
-        -- No, standard API `f32 find_wall_collisions(struct WallCollisionData *colData)`
-        -- Lua helper: `resolve_wall_collisions(pos, offset, radius)`
-
-        -- Let's try to just find floor. If no floor (OOB), revert.
         local floorHeight = find_floor_height(m.pos.x, m.pos.y + 100, m.pos.z)
         if floorHeight < -10000 then
             -- OOB
             m.pos.x = oldX
             m.pos.z = oldZ
             djui_chat_message_create("Cannot teleport there!")
-            m.classCooldown2 = 0 -- Reset CD
+            cs.cd2 = 0 -- Reset CD
             return
         end
 
@@ -176,6 +176,7 @@ hook_chat_command("class", "Set class", on_class_command)
 function classes_hud()
     local m = gMarioStates[0]
     local sTable = gPlayerSyncTable[m.playerIndex]
+    local cs = get_class_state(m.playerIndex)
 
     if not sTable.classType or sTable.classType == 0 then return end
 
@@ -189,9 +190,9 @@ function classes_hud()
     -- Slot 1
     djui_hud_set_color(0, 0, 0, 100)
     djui_hud_render_rect(x, y, 40, 40)
-    if m.classCooldown1 and m.classCooldown1 > 0 then
+    if cs.cd1 > 0 then
         djui_hud_set_color(255, 0, 0, 200)
-        local ratio = m.classCooldown1 / COOLDOWN_ABILITY_1
+        local ratio = cs.cd1 / COOLDOWN_ABILITY_1
         djui_hud_render_rect(x, y + 40 * (1-ratio), 40, 40 * ratio)
     end
     djui_hud_set_color(255, 255, 255, 255)
@@ -201,9 +202,9 @@ function classes_hud()
     x = x + 60
     djui_hud_set_color(0, 0, 0, 100)
     djui_hud_render_rect(x, y, 40, 40)
-    if m.classCooldown2 and m.classCooldown2 > 0 then
+    if cs.cd2 > 0 then
         djui_hud_set_color(255, 0, 0, 200)
-        local ratio = m.classCooldown2 / COOLDOWN_ABILITY_2
+        local ratio = cs.cd2 / COOLDOWN_ABILITY_2
         djui_hud_render_rect(x, y + 40 * (1-ratio), 40, 40 * ratio)
     end
     djui_hud_set_color(255, 255, 255, 255)
