@@ -46,9 +46,6 @@ function count_remaining_boos()
     local obj = obj_get_first(OBJ_LIST_GENACTOR)
     while obj do
         if obj.behavior == get_behavior_from_id(id_bhvGhostHuntBoo) then
-            -- Check if alive?
-            -- Standard Boos deactivate or unload when dead.
-            -- Or they might enter a "dying" state.
             if obj.activeFlags ~= 0 then
                 count = count + 1
             end
@@ -76,24 +73,13 @@ function dungeon_update(m)
 
     if not dmObj then return end
 
-    -- Only the level owner (or server?) should update the DM state?
-    -- network_init_object uses `network_send_object` to sync.
-    -- If `network_is_server()` or if we are the "dungeon owner".
-    -- For pilot, let's assume Host/Server drives the dungeon state.
-
     if network_is_server() then
         if dmObj.oBehParams2ndByte == 0 then -- Room 1 active
-            -- Count how many boos are left in the level
-            -- We assume we started with 5.
-            -- If count < 5, we have kills.
-            -- Actually, we can just set `kills = 5 - current`.
-
             local currentBoos = count_remaining_boos()
             local kills = ROOM_1_BOO_COUNT - currentBoos
 
             if kills > dmObj.oBehParams then
                 dmObj.oBehParams = kills
-                -- Optional: Feedback "Kill 1/5"
             end
         end
     end
@@ -121,12 +107,6 @@ hook_chat_command("dungeon", "Enter dungeon", on_dungeon_enter)
 
 function dungeon_level_init()
     if _G.PENDING_DUNGEON_SPAWN then
-        -- We spawn the DM object
-        -- IMPORTANT: If we are client, we rely on the server to sync it?
-        -- No, in `sm64coopdx` synced objects spawned by client usually sync to others if `network_init_object` is called.
-        -- But for a dungeon, we want it local-ish or synced to party?
-        -- For pilot, we spawn it.
-
         spawn_sync_object(
             id_bhvDungeonMaster,
             E_MODEL_DM,

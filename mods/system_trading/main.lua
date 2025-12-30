@@ -1,14 +1,6 @@
 -- name: System - Trading
 -- description: Player-to-Player trading system.
 
--- Ensure UI is loaded (global _G.TradeUI defined in ui.lua)
--- sm64coopdx auto-loads files alphabetically, so api.lua < main.lua < ui.lua.
--- Wait, 'm' comes before 'u'. So ui.lua is NOT loaded yet when main.lua runs if we rely on global.
--- Actually, the execution order is typically alpha.
--- `api.lua` (Trade global) -> `main.lua` -> `ui.lua` (TradeUI global).
--- This means inside `main.lua`, `TradeUI` might be nil immediately.
--- However, we only access `TradeUI` inside hooks (which run later), so it should be fine.
-
 function on_trade_command(msg)
     if msg == "" then
         djui_chat_message_create("Usage: /trade [PlayerName]")

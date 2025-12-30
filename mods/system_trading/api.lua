@@ -94,10 +94,6 @@ function Trade.finalize(myIndex, partnerIndex)
     local myState = gPlayerSyncTable[myIndex]
     local partnerState = gPlayerSyncTable[partnerIndex]
 
-    -- Only local player processes their own receive/deduct logic to prevent duplication/desync
-    -- But we need to ensure we only do it ONCE.
-    -- The UI calls finalize when it sees both confirmed.
-
     local myCoins = myState.tradeOfferCoins or 0
     local theirCoins = partnerState.tradeOfferCoins or 0
 

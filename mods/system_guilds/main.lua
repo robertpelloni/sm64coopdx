@@ -21,14 +21,10 @@ function guild_send_chat(msg)
 
     local packet = {
         packetType = PACKET_GUILD_CHAT,
-        senderName = m.character.name or "Player", -- Fallback, usually network name is handled elsewhere
+        senderName = gNetworkPlayers[0].name,
         guildName = myGuild,
         message = msg
     }
-
-    -- Using network_player_get_name(0) is better
-    local np = gNetworkPlayers[0]
-    packet.senderName = np.name
 
     network_send(true, packet)
 end
