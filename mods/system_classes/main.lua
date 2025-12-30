@@ -13,6 +13,10 @@ Classes.TYPE_ROGUE = 3
 local COOLDOWN_ABILITY_1 = 30 * 5 -- 5 seconds
 local COOLDOWN_ABILITY_2 = 30 * 10 -- 10 seconds
 
+-- Costs
+local MANA_COST_LOW = 10
+local MANA_COST_HIGH = 30
+
 -- Local state for cooldowns (indexed by playerIndex)
 local ClassState = {}
 
@@ -96,6 +100,14 @@ function classes_update(m)
 end
 
 function perform_ability_1(m, type, cs)
+    -- Check Mana (if Combat system present)
+    local cost = 0
+    if type == Classes.TYPE_MAGE then cost = MANA_COST_LOW end
+
+    if _G.Combat and cost > 0 then
+        if not Combat.use_mana(m, cost) then return end
+    end
+
     cs.cd1 = COOLDOWN_ABILITY_1
 
     if type == Classes.TYPE_MAGE then
@@ -120,6 +132,14 @@ function perform_ability_1(m, type, cs)
 end
 
 function perform_ability_2(m, type, cs)
+    -- Check Mana
+    local cost = 0
+    if type == Classes.TYPE_MAGE then cost = MANA_COST_HIGH end
+
+    if _G.Combat and cost > 0 then
+        if not Combat.use_mana(m, cost) then return end
+    end
+
     cs.cd2 = COOLDOWN_ABILITY_2
 
     if type == Classes.TYPE_MAGE then
@@ -139,6 +159,7 @@ function perform_ability_2(m, type, cs)
             m.pos.z = oldZ
             djui_chat_message_create("Cannot teleport there!")
             cs.cd2 = 0 -- Reset CD
+            -- Refund Mana? Not implemented in API.
             return
         end
 
