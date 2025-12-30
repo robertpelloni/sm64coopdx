@@ -1,10 +1,11 @@
 -- name: System - Anti-Cheat
--- description: Server-side validation for movement and resources.
+-- description: Server-side validation for movement and resources with Active Enforcement.
 
 local AC = {}
-AC.MAX_SPEED_GROUND = 200 -- Standard max is ~48-60, boost is ~120
+AC.MAX_SPEED_GROUND = 200
 AC.MAX_SPEED_AIR = 250
-AC.VIOLATION_THRESHOLD = 30 -- Frames of violation before action
+AC.VIOLATION_THRESHOLD = 30 -- Frames of violation before warning
+AC.KICK_THRESHOLD = 5 -- Number of rubberbands before kick
 
 -- Tracking state
 local PlayerHistory = {}
@@ -13,6 +14,7 @@ function ac_init_player(i)
     if not PlayerHistory[i] then
         PlayerHistory[i] = {
             violations = 0,
+            rubberbands = 0,
             lastPos = {x=0, y=0, z=0},
             warned = false
         }
@@ -31,24 +33,17 @@ function ac_check_movement(m)
     -- Calculate horizontal speed
     local hSpeed = math.sqrt(m.vel.x^2 + m.vel.z^2)
 
-    -- Determine Context limit
-    local limit = AC.MAX_SPEED_GROUND
-    if (m.action & ACT_GROUP_MASK) == ACT_GROUP_AIRBORNE then
-        limit = AC.MAX_SPEED_AIR
-    end
+    -- Context Check
+    local isHighSpeedAction = (
+        m.action == ACT_SHOT_FROM_CANNON or
+        m.action == ACT_RIDING_SHELL_GROUND or
+        m.action == ACT_RIDING_SHELL_FALL or
+        (m.action & ACT_FLAG_RIDING_SHELL) ~= 0 or
+        m.action == ACT_BOOST
+    )
 
-    -- Exceptions: Cannon, Shell, Boost Mod, FLUDD Turbo
-    if m.action == ACT_SHOT_FROM_CANNON or
-       m.action == ACT_RIDING_SHELL_GROUND or
-       m.action == ACT_RIDING_SHELL_FALL or
-       (m.action & ACT_FLAG_RIDING_SHELL) ~= 0 then
-        return -- Allow high speed
-    end
-
-    -- Check Boost Mod (via sync table check if possible, or just relaxed limit)
-    -- If using Sonic Boost, speed can be high.
-    -- We'll assume 300 is a safe hard cap for now.
     local HARD_CAP = 400
+    if isHighSpeedAction then HARD_CAP = 800 end
 
     if hSpeed > HARD_CAP then
         hist.violations = hist.violations + 1
@@ -56,25 +51,41 @@ function ac_check_movement(m)
         if hist.violations > 0 then hist.violations = hist.violations - 1 end
     end
 
+    -- Active Enforcement
     if hist.violations > AC.VIOLATION_THRESHOLD then
-        if not hist.warned then
-            print("ANTI-CHEAT: Player " .. gNetworkPlayers[i].name .. " detected speeding! (" .. math.floor(hSpeed) .. ")")
-            djui_chat_message_create("Server Warning: Movement anomaly detected for " .. gNetworkPlayers[i].name)
-            hist.warned = true
+        -- Action 1: Rubberband
+        if hist.rubberbands < AC.KICK_THRESHOLD then
+            -- Reset position to last valid
+            m.pos.x = hist.lastPos.x
+            m.pos.y = hist.lastPos.y
+            m.pos.z = hist.lastPos.z
+            m.vel.x = 0
+            m.vel.y = 0
+            m.vel.z = 0
+
+            hist.rubberbands = hist.rubberbands + 1
+            hist.violations = 0 -- Reset violation counter, but keep rubberband count
+
+            djui_chat_message_create("Server: " .. gNetworkPlayers[i].name .. " was rubberbanded for speeding.")
+            print("AC: Rubberbanded " .. gNetworkPlayers[i].name)
+        else
+            -- Action 2: Kick
+            djui_chat_message_create("Server: Kicking " .. gNetworkPlayers[i].name .. " for persistent cheating.")
+            print("AC: Kicking " .. gNetworkPlayers[i].name)
+
+            if network_player_kick then
+                network_player_kick(i)
+            else
+                print("AC Error: network_player_kick not available!")
+            end
+
+            -- Reset state in case they rejoin
+            hist.rubberbands = 0
+            hist.violations = 0
         end
-
-        -- Rubberband?
-        -- m.pos.x = hist.lastPos.x
-        -- m.pos.y = hist.lastPos.y
-        -- m.pos.z = hist.lastPos.z
-        -- m.vel.x = 0
-        -- m.vel.z = 0
-
-        -- Reset violation to prevent spam
-        hist.violations = 0
     end
 
-    -- Store valid pos
+    -- Store valid pos (only if no violation pending)
     if hist.violations == 0 then
         hist.lastPos.x = m.pos.x
         hist.lastPos.y = m.pos.y
@@ -85,7 +96,6 @@ end
 hook_event(HOOK_MARIO_UPDATE, ac_check_movement)
 
 -- Resource Checks (Coins)
--- We track the previous coin count. If it jumps by more than X in one frame, flag it.
 local CoinHistory = {}
 
 function ac_check_coins(m)
@@ -97,18 +107,9 @@ function ac_check_coins(m)
 
     local diff = m.numCoins - CoinHistory[i]
 
-    -- Max possible coins in 1 frame?
-    -- 1 (Yellow), 2 (Blue/Red?), 5 (Blue).
-    -- If they collect a cluster, maybe 10-20?
-    -- If they kill a boss, maybe 100?
-    -- Let's set a suspicious threshold.
-
     if diff > 100 then
-        print("ANTI-CHEAT: Player " .. gNetworkPlayers[i].name .. " gained " .. diff .. " coins instantly.")
-        -- Revert?
-        -- m.numCoins = CoinHistory[i]
-        -- Hard to revert sync fields reliably without fighting the client.
-        -- Just Log for now.
+        print("AC: Player " .. gNetworkPlayers[i].name .. " gained " .. diff .. " coins instantly.")
+        -- Log only for now
     end
 
     CoinHistory[i] = m.numCoins
