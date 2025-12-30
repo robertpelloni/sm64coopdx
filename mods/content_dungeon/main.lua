@@ -4,7 +4,8 @@
 local DUNGEON_LEVEL = LEVEL_BBH -- Reusing BBH for now
 local DUNGEON_AREA = 1
 
-local ROOM_1_BOOS = 5
+-- Number of Boos required to unlock Room 2
+local ROOM_1_BOO_COUNT = 5
 
 -- Instance Data: Keyed by instanceID
 local DungeonState = {}
@@ -29,61 +30,72 @@ function bhv_dungeon_master_init(o)
 end
 
 function bhv_dungeon_master_loop(o)
-    if o.oBehParams >= ROOM_1_BOOS and o.oBehParams2ndByte == 0 then
+    -- Client side effects
+    if o.oBehParams >= ROOM_1_BOO_COUNT and o.oBehParams2ndByte == 0 then
         o.oBehParams2ndByte = 1 -- Room 2 unlock
-        djui_chat_message_create("Room 1 Cleared! Proceed...")
+        djui_chat_message_create("Room 1 Cleared! The path opens...")
         play_puzzle_jingle()
     end
 end
 
 local id_bhvDungeonMaster = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_dungeon_master_init, bhv_dungeon_master_loop)
 
+-- Helper to count boos
+function count_remaining_boos()
+    local count = 0
+    local obj = obj_get_first(OBJ_LIST_GENACTOR)
+    while obj do
+        if obj.behavior == get_behavior_from_id(id_bhvGhostHuntBoo) then
+            -- Check if alive?
+            -- Standard Boos deactivate or unload when dead.
+            -- Or they might enter a "dying" state.
+            if obj.activeFlags ~= 0 then
+                count = count + 1
+            end
+        end
+        obj = obj_get_next(obj)
+    end
+    return count
+end
+
 function dungeon_update(m)
     -- Only run logic if we are in the dungeon
     if gNetworkPlayers[m.playerIndex].currLevelNum ~= DUNGEON_LEVEL then return end
-    if m.playerIndex ~= 0 then return end -- Local authority for tracking own kills/instance
+    if m.playerIndex ~= 0 then return end -- Local authority checks logic, but Server (or Host) updates Master Object
 
-    local sTable = gPlayerSyncTable[0]
-    local inst = sTable.instanceID or 0
-    if inst == 0 then return end
-
-    dungeon_init_instance(inst)
-    local dState = DungeonState[inst]
-
-    -- Check for kills
-    -- We scan for Boos that are "dead" or dying
-    -- Hard to track "just died" without a hook on the object itself.
-    -- Alternative: Count living Boos.
-    -- If count < expected, increment kills?
-    -- Issue: Boos might not spawn until near.
-
-    -- Let's use a simpler approach: Hook ON_DEATH if available, or modify Boo behavior?
-    -- We can iterate `OBJ_LIST_GENACTOR` for objects with `bhvGhostHuntBoo` (id).
-    -- But we don't have the ID easily exposed unless we find it.
-
-    -- For this Pilot, we will simulate progress via Command or "Near Interaction".
-    -- "Kill" command for debug?
-    -- Or check if Mario attacks near a Boo?
-    -- Let's assume the user kills them normally.
-    -- We'll just auto-increment kills over time for the "Cinematic Experience" of the roadmap? No.
-
-    -- Proper way:
-    -- The Dungeon Master object should be the authority.
-    -- We will just make the DM unlock Room 2 if the player stands near the door for 5 seconds (Puzzle).
-    -- Simulating "clearing the room".
-
+    -- We need to find the DM object
+    local dmObj = nil
     local obj = obj_get_first(OBJ_LIST_GENACTOR)
     while obj do
         if obj.behavior == id_bhvDungeonMaster then
-            -- Found our controller
-            -- Cheat: Auto increment for testing
-            if m.controller.buttonPressed & D_JPAD ~= 0 then
-                obj.oBehParams = obj.oBehParams + 1
-                djui_chat_message_create("Killed a ghost (Debug)")
-            end
+            dmObj = obj
             break
         end
         obj = obj_get_next(obj)
+    end
+
+    if not dmObj then return end
+
+    -- Only the level owner (or server?) should update the DM state?
+    -- network_init_object uses `network_send_object` to sync.
+    -- If `network_is_server()` or if we are the "dungeon owner".
+    -- For pilot, let's assume Host/Server drives the dungeon state.
+
+    if network_is_server() then
+        if dmObj.oBehParams2ndByte == 0 then -- Room 1 active
+            -- Count how many boos are left in the level
+            -- We assume we started with 5.
+            -- If count < 5, we have kills.
+            -- Actually, we can just set `kills = 5 - current`.
+
+            local currentBoos = count_remaining_boos()
+            local kills = ROOM_1_BOO_COUNT - currentBoos
+
+            if kills > dmObj.oBehParams then
+                dmObj.oBehParams = kills
+                -- Optional: Feedback "Kill 1/5"
+            end
+        end
     end
 end
 
@@ -101,7 +113,7 @@ function on_dungeon_enter(msg)
     end
 
     _G.PENDING_DUNGEON_SPAWN = true
-    djui_chat_message_create("Entering Dungeon Instance " .. inst)
+    djui_chat_message_create("Entering Crypt of the Vanished...")
     return true
 end
 
@@ -109,6 +121,12 @@ hook_chat_command("dungeon", "Enter dungeon", on_dungeon_enter)
 
 function dungeon_level_init()
     if _G.PENDING_DUNGEON_SPAWN then
+        -- We spawn the DM object
+        -- IMPORTANT: If we are client, we rely on the server to sync it?
+        -- No, in `sm64coopdx` synced objects spawned by client usually sync to others if `network_init_object` is called.
+        -- But for a dungeon, we want it local-ish or synced to party?
+        -- For pilot, we spawn it.
+
         spawn_sync_object(
             id_bhvDungeonMaster,
             E_MODEL_DM,

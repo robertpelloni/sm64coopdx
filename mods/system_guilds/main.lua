@@ -1,10 +1,52 @@
 -- name: System - Guilds
 -- description: Guild system for MMORPG social structure.
 
-function guild_init()
-    -- Ensure sync field exists implicitly by usage
+-- Packet Types
+local PACKET_GUILD_CHAT = 0
+
+-- Guild Data Management
+function guild_get_name(playerIndex)
+    local sTable = gPlayerSyncTable[playerIndex]
+    return sTable.guildName
 end
 
+-- Networking
+function guild_send_chat(msg)
+    local m = gMarioStates[0]
+    local myGuild = guild_get_name(0)
+    if not myGuild then
+        djui_chat_message_create("You are not in a guild.")
+        return
+    end
+
+    local packet = {
+        packetType = PACKET_GUILD_CHAT,
+        senderName = m.character.name or "Player", -- Fallback, usually network name is handled elsewhere
+        guildName = myGuild,
+        message = msg
+    }
+
+    -- Using network_player_get_name(0) is better
+    local np = gNetworkPlayers[0]
+    packet.senderName = np.name
+
+    network_send(true, packet)
+end
+
+function on_guild_packet(p)
+    if p.packetType == PACKET_GUILD_CHAT then
+        local myGuild = guild_get_name(0)
+        if myGuild and myGuild == p.guildName then
+            -- Format: [Guild] <Name>: Message
+            local text = "\\#00ff00\\[Guild] " .. p.senderName .. ":\\#ffffff\\ " .. p.message
+            djui_chat_message_create(text)
+        end
+    end
+end
+
+hook_event(HOOK_ON_PACKET_RECEIVE, on_guild_packet)
+
+-- Commands
 function on_guild_command(msg)
     local m = gMarioStates[0]
     local sTable = gPlayerSyncTable[m.playerIndex]
@@ -28,12 +70,20 @@ function on_guild_command(msg)
     return true
 end
 
-hook_chat_command("guild", "Manage guild", on_guild_command)
+function on_guild_chat_command(msg)
+    guild_send_chat(msg)
+    return true
+end
 
+hook_chat_command("guild", "Manage guild", on_guild_command)
+hook_chat_command("g", "Guild chat", on_guild_chat_command)
+
+-- Rendering (Nametags)
 function guild_nametags()
     for i = 1, MAX_PLAYERS - 1 do -- Skip local (0)
         local m = gMarioStates[i]
-        if m.marioBodyState.action & ACT_FLAG_ACTIVE ~= 0 then -- Connected?
+        local np = gNetworkPlayers[i]
+        if np.connected and m.marioBodyState.action & ACT_FLAG_ACTIVE ~= 0 then
             local sTable = gPlayerSyncTable[i]
             if sTable then
                 local pos = {x = m.pos.x, y = m.pos.y + 200, z = m.pos.z}
