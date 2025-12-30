@@ -61,21 +61,13 @@ end
 function classes_update(m)
     if m.playerIndex ~= 0 then return end
 
+    -- Safety Check: Don't trigger abilities if in a Menu or Trade
+    if _G.MENU_OPEN or (_G.Trade and gPlayerSyncTable[0].tradeStatus ~= 0) then return end
+
     local sTable = gPlayerSyncTable[m.playerIndex]
     local cType = sTable.classType or 0
 
     if cType == 0 then return end
-
-    -- Inputs for Abilities
-    -- Let's map Ability 1 to X and Ability 2 to Y (if available) or D-Pad
-    -- SM64 buttons: A, B, Z, Start, L, R, C-Buttons.
-    -- B is Attack/Interact.
-    -- Z is Crouch/Ground Pound.
-    -- L is Camera/Menu.
-    -- R is Camera/Menu.
-    -- X/Y are usually mapped to B/A or not present.
-
-    -- Let's use D-Pad Left/Right for abilities since we use Up/Down for Weapon Wheel/Inventory.
 
     -- Cooldown Management (Local)
     if not m.classCooldown1 then m.classCooldown1 = 0 end
@@ -127,8 +119,32 @@ function perform_ability_2(m, type)
     if type == Classes.TYPE_MAGE then
         -- Teleport (Blink forward)
         local dist = 500
+        local oldX = m.pos.x
+        local oldZ = m.pos.z
+
         m.pos.x = m.pos.x + dist * math.sin(m.faceAngle.y / 0x8000 * math.pi)
         m.pos.z = m.pos.z + dist * math.cos(m.faceAngle.y / 0x8000 * math.pi)
+
+        -- Collision Safety Check
+        local floor = resolve_and_return_wall_collisions(m.pos, 100, 50)
+        -- Actually `resolve_and_return_wall_collisions` modifies pos directly and returns floor height?
+        -- No, standard API `f32 find_wall_collisions(struct WallCollisionData *colData)`
+        -- Lua helper: `resolve_wall_collisions(pos, offset, radius)`
+
+        -- Let's try to just find floor. If no floor (OOB), revert.
+        local floorHeight = find_floor_height(m.pos.x, m.pos.y + 100, m.pos.z)
+        if floorHeight < -10000 then
+            -- OOB
+            m.pos.x = oldX
+            m.pos.z = oldZ
+            djui_chat_message_create("Cannot teleport there!")
+            m.classCooldown2 = 0 -- Reset CD
+            return
+        end
+
+        -- Clamp to floor
+        if m.pos.y < floorHeight then m.pos.y = floorHeight end
+
         m.particleFlags = m.particleFlags | PARTICLE_MIST_CIRCLE
 
     elseif type == Classes.TYPE_WARRIOR then

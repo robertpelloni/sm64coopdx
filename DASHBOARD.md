@@ -17,13 +17,15 @@ The project structure is organized as follows:
     -   `mods/mechanic_transformation/`: Transformation API (Banjo style).
     -   `mods/mechanic_vehicle/`: Vehicle mechanic (Zoomer).
     -   `mods/system_achievements/`: Achievements and Titles system.
-    -   `mods/system_guilds/`: Guild system and nametags.
+    -   `mods/system_classes/`: RPG Class system (Warrior/Mage/Rogue).
+    -   `mods/system_guilds/`: Guild system, Chat, and Nametags.
     -   `mods/system_instancing/`: Instancing system (Dimensions).
     -   `mods/system_inventory/`: Universal Inventory system and Economy.
     -   `mods/system_optimization/`: Client-side interest management/culling.
     -   `mods/system_perks/`: Perks/Badges system.
     -   `mods/system_quests/`: Quest system API and tracker.
     -   `mods/system_shop/`: NPC Shop system.
+    -   `mods/system_trading/`: Player Trading system.
     -   `mods/system_weapon_wheel/`: Weapon Wheel UI.
     -   `mods/system_world/`: Connected World (Portals).
 -   **`include/`**: Header files.
@@ -43,5 +45,5 @@ See `ROADMAP_MMORPG.md` for the detailed plan and feature breakdown.
 
 ## Version Information
 
-Current Version: `v1.5` (Internal Version: 42)
+Current Version: `v1.6` (Internal Version: 43)
 See `src/pc/network/version.h`.
