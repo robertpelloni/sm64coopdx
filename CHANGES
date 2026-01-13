@@ -1,3 +1,21 @@
+
+MMORPG Roadmap Update 1
+
+*) MMORPG Roadmap (#PR_ID)
+   - Added ROADMAP_MMORPG.md with definitive research on 3D platformers and MMO transition plan.
+   - Categorized features by generation (Spyro, Ratchet, Odyssey, etc.).
+   - Outlined technical roadmap for networking and server architecture.
+
+*) Phase 1 Feature Parity Implementation (#PR_ID)
+   - Added Spyro-style Glide mechanic (`mods/mechanic_glide`).
+   - Added Entity Possession mechanic (`mods/mechanic_possession`) with test agent.
+   - Added Sonic-style Boost mechanic (`mods/mechanic_boost`) with sync meter.
+   - Added Hookshot mechanic (`mods/mechanic_hookshot`) with raycasting.
+   - Added Universal Inventory System (`mods/system_inventory`) with network sync and persistence.
+   - Added Weapon Wheel UI (`mods/system_weapon_wheel`).
+   - Added Perks/Badges System (`mods/system_perks`).
+   - Implemented persistence (Save/Load) and economy integration (Coins -> Inventory).
+
 Refresh 13
 
 - No more nonmatchings remain for US, JP, or EU builds. Three(!!!) remain for Shindou (SH).

@@ -21,6 +21,7 @@
 #include "utils/smlua_collision_utils.h"
 #include "game/hardcoded.h"
 #include "include/macros.h"
+#include "pc/network/packets/packet.h"
 
 bool smlua_functions_valid_param_count(lua_State* L, int expected) {
     int top = lua_gettop(L);
@@ -304,6 +305,16 @@ int smlua_func_network_send_bytestring(lua_State* L) {
 int smlua_func_network_send_bytestring_to(lua_State* L) {
     if (!smlua_functions_valid_param_count(L, 3)) { return 0; }
     network_send_lua_custom_bytestring(false);
+    return 1;
+}
+
+int smlua_func_network_player_kick(lua_State* L) {
+    if (!smlua_functions_valid_param_count(L, 1)) { return 0; }
+
+    u8 localIndex = smlua_to_integer(L, 1);
+    if (!gSmLuaConvertSuccess) { LOG_LUA("network_player_kick: Failed to convert parameter 1"); return 0; }
+
+    network_send_kick(localIndex, EKT_KICKED);
     return 1;
 }
 
@@ -1056,6 +1067,7 @@ void smlua_bind_functions(void) {
     smlua_bind_function(L, "network_send_to", smlua_func_network_send_to);
     smlua_bind_function(L, "network_send_bytestring", smlua_func_network_send_bytestring);
     smlua_bind_function(L, "network_send_bytestring_to", smlua_func_network_send_bytestring_to);
+    smlua_bind_function(L, "network_player_kick", smlua_func_network_player_kick);
     smlua_bind_function(L, "set_exclamation_box_contents", smlua_func_set_exclamation_box_contents);
     smlua_bind_function(L, "get_exclamation_box_contents", smlua_func_get_exclamation_box_contents);
     smlua_bind_function(L, "get_texture_info", smlua_func_get_texture_info);

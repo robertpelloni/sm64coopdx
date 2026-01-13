@@ -4,6 +4,7 @@
 #include <time.h>   // for nanosleep
 #else
 #include <unistd.h> // for usleep
+#include <sys/time.h>
 #endif
 
 #include <errno.h>
@@ -93,7 +94,21 @@ static void gfx_dummy_wm_swap_buffers_end(void) {
 }
 
 static double gfx_dummy_wm_get_time(void) {
-    return 0.0;
+#ifdef WIN32
+    LARGE_INTEGER freq;
+    LARGE_INTEGER time;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&time);
+    return (double)time.QuadPart / (double)freq.QuadPart;
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+#endif
 }
 
 static char* gfx_dummy_wm_get_clipboard_text(void) {
