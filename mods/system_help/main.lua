@@ -2,11 +2,13 @@
 -- description: Centralized Help Command.
 
 local HELP_TOPICS = {
-    general = "Welcome to sm64coopdx MMORPG! Use /help [topic] for more info.\nTopics: controls, commands, classes, guilds, economy",
+    general = "Welcome to sm64coopdx MMORPG! Use /help [topic] for more info.\nTopics: controls, commands, classes, guilds, party, admin, economy",
     controls = "Controls:\nL+START: Menu\nX: Boost (Ground)\nL+A: Glide (Air)\nR: FLUDD/Throw\nY: Hookshot\nZ: Crouch/Drop",
-    commands = "Commands:\n/config - Settings\n/class - Change Class\n/guild - Guilds\n/trade - Trade\n/quest - Quests",
+    commands = "Commands:\n/config - Settings\n/class - Change Class\n/guild - Guilds\n/party - Party\n/trade - Trade\n/quest - Quests",
     classes = "Classes:\nWarrior: Melee (Bash, Rage)\nMage: Magic (Fireball, Teleport)\nRogue: Stealth (Dash, Invisibility)",
     guilds = "Guilds:\n/guild create [name]\n/guild join [name]\n/g [msg] - Guild Chat",
+    party = "Party:\n/party create\n/party invite [name]\n/party join [name]\n/p [msg] - Party Chat\nFeatures: No Friendly Fire",
+    admin = "Admin (Host):\n/admin kick [name]\n/admin ban [name]\n/admin tp [name]\nAccess Admin Panel in Main Menu",
     economy = "Economy:\nCollect coins to buy items from Shopkeepers (Toads).\nPress B near Toad to open Shop."
 }
 
