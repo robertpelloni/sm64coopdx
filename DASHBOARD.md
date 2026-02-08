@@ -30,6 +30,8 @@ The project structure is organized as follows:
     -   `mods/system_trading/`: Player Trading system.
     -   `mods/system_weapon_wheel/`: Weapon Wheel UI.
     -   `mods/system_world/`: Connected World (Portals).
+    -   `mods/content_raid_boss/`: King Whomp Raid Boss.
+    -   `mods/content_dungeon/`: Crypt of the Vanished Dungeon.
 -   **`include/`**: Header files.
 -   **`levels/`**: Level data and scripts.
 -   **`actors/`**: Actor data and models.
@@ -39,7 +41,7 @@ The project structure is organized as follows:
 
 ## Submodules
 
-There are no submodules configured in this repository.
+There are no submodules configured in this repository. The previously included `bobcoin` submodule has been removed.
 
 ## MMORPG Roadmap
 
@@ -47,5 +49,5 @@ See `ROADMAP_MMORPG.md` for the detailed plan and feature breakdown.
 
 ## Version Information
 
-Current Version: `v1.7` (Internal Version: 44)
-See `src/pc/network/version.h`.
+Current Version: `v1.8`
+See `VERSION.md` and `CHANGELOG.md`.

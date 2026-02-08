@@ -31,6 +31,16 @@ local OPTIONS = {
         action = function() djui_chat_message_create("Use /guild [join|leave] [name]") end
     },
     {
+        name = "Config",
+        description = "Change game settings. (Use /config)",
+        action = function() djui_chat_message_create("Use /config [setting] [value]") end
+    },
+    {
+        name = "Help",
+        description = "View game manual. (Use /help)",
+        action = function() djui_chat_message_create("Use /help [topic]") end
+    },
+    {
         name = "Close",
         description = "Close the menu.",
         action = function() MENU_OPEN = false end
@@ -47,14 +57,14 @@ function menu_render()
 
     -- Background
     djui_hud_set_color(0, 0, 50, 240)
-    djui_hud_render_rect(cx - 150, cy - 120, 300, 240)
+    djui_hud_render_rect(cx - 150, cy - 140, 300, 280)
 
     -- Title
     djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("MAIN MENU", cx - 45, cy - 100, 1)
+    djui_hud_print_text("MAIN MENU", cx - 45, cy - 120, 1)
 
     -- Options
-    local y = cy - 60
+    local y = cy - 80
     for i, opt in ipairs(OPTIONS) do
         if i == SELECTION then
             djui_hud_set_color(255, 255, 0, 255)
@@ -63,7 +73,7 @@ function menu_render()
             djui_hud_set_color(200, 200, 200, 255)
             djui_hud_print_text("  " .. opt.name, cx - 100, y, 1)
         end
-        y = y + 30
+        y = y + 25
     end
 
     -- Description Footer
@@ -72,7 +82,7 @@ function menu_render()
         djui_hud_set_color(150, 150, 150, 255)
         local descW = djui_hud_measure_text(selOpt.description)
         -- Center it roughly
-        djui_hud_print_text(selOpt.description, cx - descW/2, cy + 90, 1)
+        djui_hud_print_text(selOpt.description, cx - descW/2, cy + 120, 1)
     end
 end
 
