@@ -3,6 +3,7 @@
 
 Quest.register("coin_collector", {
     name = "Coin Collector",
+    description = "Collect 10 coins around the castle grounds to prove your worth as an adventurer.",
     target = 10,
     reward = {item = "coin_bag", amount = 50}
 })
