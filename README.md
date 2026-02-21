@@ -1,18 +1,75 @@
-![sm64coopdx Logo](textures/segment2/custom_coopdx_logo.rgba32.png)
+# sm64coopdx: The MMORPG Project
 
-sm64coopdx is an online multiplayer project for the Super Mario 64 PC port that synchronizes all entities and every level for multiple players. The project was started by the Coop Deluxe Team. The purpose is to actively maintain and improve, but also continue sm64ex-coop, created by djoslin0. More features, customization, and power to the Lua API allow modders and players to enjoy Super Mario 64 more than ever!
+![Logo](textures/segment2/custom_coopdx_logo.rgba32.png)
 
-Feel free to report bugs or contribute to the project. 
+A massive multiplayer online modification for Super Mario 64, integrating mechanics from the history of 3D platformers into a cohesive world.
 
-## Initial Goal (Accomplished)
-Create a mod for the PC port where multiple people can play together online.
+## Overview
+This project transforms SM64 into an MMORPG with persistent inventory, quests, guilds, parties, classes, and advanced movement mechanics. Join friends to explore, battle, and build your legacy.
 
-Unlike previous multiplayer projects, this one synchronizes enemies and events. This allows players to interact with the same world at the same time.
+## Getting Started
+1.  **Join the Server**: Connect to a server running this mod.
+2.  **Open the Menu**: Press `L + START` to access the Main Menu.
+3.  **Choose a Class**: Use `/class [warrior|mage|rogue]` to select your role.
+4.  **Start a Quest**: Visit the Quest Log in the Main Menu or use `/quest coin`.
 
-Interestingly enough though, the goal of the project has slowly evolved over time from simply just making a Super Mario 64 multiplayer mod to constantly maintaining and improving the project (notably the Lua API.)
+## Controls & Mechanics
 
-## Lua
-sm64coopdx is moddable via Lua, similar to Roblox and Garry's Mod's Lua APIs. To get started, click [here](docs/lua/lua.md) to see the Lua documentation.
+### Core Systems
+*   **Main Menu**: `L + START` - Access Inventory, Quests, Guilds, Party, Admin, and Options.
+*   **Inventory**: Manage your items. Use `D-Pad` to navigate, `A` to use/equip.
+*   **Weapon Wheel**: Hold `L Trigger` to quickly select equipped items/weapons.
+*   **Quests**: Track your progress via the Quest Log in the Main Menu.
+*   **Shop**: Interact with Toads (Press `B`) to buy items.
 
-## Wiki
-The wiki is made using GitHub's wiki feature, you can go to the wiki tab or click [here](https://github.com/coop-deluxe/sm64coopdx/wiki).
+### Social Features
+*   **Party System**: Group up for dungeons.
+    *   `/party create`: Create a party.
+    *   `/party invite [name]`: Invite a player.
+    *   `/p [message]`: Party Chat.
+    *   **Features**: Shared HUD, No Friendly Fire.
+*   **Guilds**: Join forces with other players.
+    *   `/guild create [name]`: Create a guild.
+    *   `/guild join [name]`: Join a guild.
+    *   `/g [message]`: Guild Chat.
+*   **Trading**: Use `/trade [player]` or interact with players to initiate a trade.
+
+### Administration (Host Only)
+*   **Admin Panel**: Access via Main Menu -> Admin.
+*   **Commands**:
+    *   `/admin kick [name]`: Kick a player.
+    *   `/admin ban [name]`: Ban a player.
+    *   `/admin tp [name]`: Teleport to a player.
+
+### Movement Abilities
+*   **Sonic Boost**: While moving on ground, press `X`. Requires Boost Meter.
+*   **Spyro Glide**: In air, hold `L + A` to glide.
+*   **FLUDD**: Equip a nozzle (Hover, Rocket, Turbo) from Inventory.
+    *   **Hover**: Press `R` in air.
+    *   **Rocket**: Press `R` to launch.
+    *   **Turbo**: Press `R` while moving to speed up.
+*   **Hookshot**: Equip `Hookshot`. Press `Y` to fire at surfaces.
+*   **Telekinesis**: Press `R` to grab objects (if no FLUDD nozzle equipped). Press `R` again to throw.
+*   **Vehicle (Zoomer)**: Use `/vehicle` to toggle hover bike mode. Press `A` to accelerate.
+
+### Classes & Combat
+*   **Warrior**: High HP, Melee focus.
+    *   *Ability 1 (Left D-Pad)*: Bash/Stun.
+    *   *Ability 2 (Right D-Pad)*: Rage (Invulnerability).
+*   **Mage**: Ranged magic.
+    *   *Ability 1 (Left D-Pad)*: Fireball.
+    *   *Ability 2 (Right D-Pad)*: Teleport.
+*   **Rogue**: Stealth and Speed.
+    *   *Ability 1 (Left D-Pad)*: Dash.
+    *   *Ability 2 (Right D-Pad)*: Invisibility.
+
+## Items & Economy
+*   **Coins**: The primary currency. Collected in the world.
+*   **Badges**: Equip badges from Inventory for passive bonuses (Speed, Health, etc.).
+*   **Transformation Totems**: Use to transform into enemies (Goomba, Termite).
+
+## Lua API
+sm64coopdx is moddable via Lua. See `docs/lua/lua.md` for documentation.
+
+## Credits
+Based on sm64ex-coop. Developed by the Coop Deluxe Team.

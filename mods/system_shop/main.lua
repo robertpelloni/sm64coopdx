@@ -74,28 +74,27 @@ function shop_ui_render()
     local cy = h / 2
 
     -- Background
-    djui_hud_set_color(0, 0, 0, 200)
-    djui_hud_render_rect(cx - 150, cy - 100, 300, 200)
+    djui_hud_set_color(0, 0, 0, 220)
+    djui_hud_render_rect(cx - 200, cy - 150, 400, 300)
 
     -- Title
     djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("SHOP", cx - 20, cy - 90, 1)
+    djui_hud_print_text("SHOP", cx - 40, cy - 140, 1)
 
     -- Coins
     local coins = Inventory.get_count(gMarioStates[0], "coin_bag")
     djui_hud_set_color(255, 215, 0, 255)
-    djui_hud_print_text("Coins: " .. coins, cx - 140, cy - 90, 1)
+    djui_hud_print_text("Coins: " .. coins, cx - 180, cy - 140, 1)
 
-    -- Items
-    local y = cy - 60
-    -- Simple scroll or limit? For now, render first 5 or logic?
-    -- Let's just render all and overflow (Prototype)
-    -- Or simplistic scroll logic based on selection
+    -- Items List
+    local listX = cx - 180
+    local listY = cy - 100
 
     local startIdx = 1
     if SELECTION > 5 then startIdx = SELECTION - 4 end
 
-    for i = startIdx, math.min(startIdx + 4, #SHOP_ITEMS) do
+    local visibleCount = 0
+    for i = startIdx, math.min(startIdx + 8, #SHOP_ITEMS) do
         local itemData = SHOP_ITEMS[i]
         local def = _G.Inventory.items[itemData.id]
         if def then
@@ -104,17 +103,61 @@ function shop_ui_render()
 
             if i == SELECTION then
                 djui_hud_set_color(0, 255, 0, 255)
-                djui_hud_print_text("> " .. name .. " (" .. price .. ")", cx - 100, y, 1)
+                djui_hud_print_text("> " .. name .. " (" .. price .. ")", listX, listY + visibleCount*25, 1)
             else
                 djui_hud_set_color(200, 200, 200, 255)
-                djui_hud_print_text("  " .. name .. " (" .. price .. ")", cx - 100, y, 1)
+                djui_hud_print_text("  " .. name .. " (" .. price .. ")", listX, listY + visibleCount*25, 1)
             end
-            y = y + 20
+            visibleCount = visibleCount + 1
+        end
+    end
+
+    -- Separator
+    djui_hud_set_color(255, 255, 255, 255)
+    djui_hud_render_rect(cx, cy - 110, 2, 220)
+
+    -- Details Pane
+    local selItemData = SHOP_ITEMS[SELECTION]
+    if selItemData then
+        local def = _G.Inventory.items[selItemData.id]
+        if def then
+            local detX = cx + 20
+            local detY = cy - 100
+
+            djui_hud_set_color(0, 255, 255, 255)
+            djui_hud_print_text(def.name, detX, detY, 1)
+
+            djui_hud_set_color(255, 215, 0, 255)
+            djui_hud_print_text("Price: " .. selItemData.price, detX, detY + 25, 1)
+
+            -- Description
+            djui_hud_set_color(200, 200, 200, 255)
+            local desc = def.description or "No description."
+
+            local words = {}
+            for word in string.gmatch(desc, "%S+") do table.insert(words, word) end
+
+            local line = ""
+            local lineY = detY + 60
+            local maxLen = 22
+
+            for _, word in ipairs(words) do
+                if string.len(line) + string.len(word) > maxLen then
+                    djui_hud_print_text(line, detX, lineY, 0.8)
+                    lineY = lineY + 20
+                    line = word .. " "
+                else
+                    line = line .. word .. " "
+                end
+            end
+            if line ~= "" then
+                 djui_hud_print_text(line, detX, lineY, 0.8)
+            end
         end
     end
 
     djui_hud_set_color(200, 200, 200, 255)
-    djui_hud_print_text("A: Buy  B: Exit", cx - 60, cy + 80, 1)
+    djui_hud_print_text("A: Buy  B: Exit", cx - 60, cy + 130, 1)
 end
 
 -- UI Input
@@ -129,10 +172,12 @@ function shop_update(m)
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
         SELECTION = SELECTION + 1
         if SELECTION > #SHOP_ITEMS then SELECTION = 1 end
+        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
     end
     if (m.controller.buttonPressed & U_JPAD) ~= 0 then
         SELECTION = SELECTION - 1
         if SELECTION < 1 then SELECTION = #SHOP_ITEMS end
+        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
     end
 
     if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
