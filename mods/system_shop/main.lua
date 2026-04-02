@@ -1,163 +1,216 @@
--- name: System - Shop
--- description: NPC Shopkeeper system.
+-- name: System - Shop and NPCs
+-- description: Shopkeeper NPC using UIToolkit
 
-local SHOP_OPEN = false
-local SHOP_ITEMS = {
-    {id = "hookshot", price = 50},
-    {id = "badge_speed", price = 100},
-    {id = "badge_feather", price = 150},
-    {id = "badge_health", price = 200},
-    {id = "badge_metal", price = 500},
-    {id = "badge_wing", price = 500},
-    {id = "blaster", price = 300},
-    {id = "totem_termite", price = 500},
-    {id = "totem_goomba", price = 400},
-}
+_G.Shop = {}
+
+-- NPC definition
+E_MODEL_TOAD_PLAYER = smlua_model_util_get_id("toad_player_geo")
+-- E_MODEL_TOAD_PLAYER = 114 -- temp fallback if needed
+
+-- Shop UI State
+local UI_VISIBLE = false
 local SELECTION = 1
+local SCROLL_OFFSET = 0
+local OPEN_TIMER = 0
+local CURRENT_SHOP = nil
 
--- Shopkeeper Behavior
-local E_MODEL_TOAD = smlua_model_util_get_id("toad_geo")
+-- Define Shops
+Shop.registry = {
+    ["general"] = {
+        name = "General Store",
+        items = {
+            {id = "potion_health", cost = 50, reqRep = nil},
+            {id = "potion_mana", cost = 50, reqRep = nil},
+            {id = "mushroom", cost = 10, reqRep = nil},
+            {id = "wood", cost = 5, reqRep = nil},
+        }
+    },
+    ["toad_faction"] = {
+        name = "Toad Brigade Quartermaster",
+        items = {
+            {id = "badge_toad_honor", cost = 500, reqRep = {faction="toads", level=100}},
+            {id = "mount_yoshi", cost = 1000, reqRep = {faction="toads", level=500}},
+        }
+    }
+}
 
-function bhv_shopkeeper_init(o)
-    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.oInteractType = INTERACT_TEXT
-    o.oInteractionSubtype = INT_SUBTYPE_NPC
-    o.oGravity = -4.0
-    o.oFriction = 0.8
-    o.oBuoyancy = 1.0
-    o.oOpacity = 255
-    o.oDamageOrCoinValue = 0 -- No dialog ID
-
-    -- Sync
-    network_init_object(o, true, nil)
-end
-
-function bhv_shopkeeper_loop(o)
-    object_step(o)
-
-    local m = gMarioStates[0]
-    if dist_between_objects(o, m.marioObj) < 150 then
-        if (m.controller.buttonPressed & B_BUTTON) ~= 0 and not SHOP_OPEN then
-            SHOP_OPEN = true
-            SELECTION = 1
-            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
-        end
+--- Open Shop UI
+function Shop.open(shopId)
+    if Shop.registry[shopId] then
+        CURRENT_SHOP = Shop.registry[shopId]
+        UI_VISIBLE = true
+        SELECTION = 1
+        SCROLL_OFFSET = 0
+        OPEN_TIMER = 5
     end
 end
 
-local id_bhvShopkeeper = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_shopkeeper_init, bhv_shopkeeper_loop)
-
--- Spawn Command
-function on_spawn_shop(msg)
-    local m = gMarioStates[0]
-    local obj = spawn_sync_object(
-        id_bhvShopkeeper,
-        E_MODEL_TOAD,
-        m.pos.x + 200 * sins(m.faceAngle.y),
-        m.pos.y,
-        m.pos.z + 200 * coss(m.faceAngle.y),
-        nil
-    )
-    djui_chat_message_create("Spawned Shopkeeper")
-    return true
-end
-
-hook_chat_command("spawn_shop", "Spawn a shopkeeper", on_spawn_shop)
-
--- UI Render
 function shop_ui_render()
-    if not SHOP_OPEN then return end
+    if not UI_VISIBLE or not CURRENT_SHOP then return end
+    if not _G.UIToolkit then return end
 
-    local w = djui_hud_get_screen_width()
-    local h = djui_hud_get_screen_height()
-    local cx = w / 2
-    local cy = h / 2
+    local items = {}
+    for _, item in ipairs(CURRENT_SHOP.items) do
+        local def = _G.Inventory and _G.Inventory.items[item.id]
+        local name = def and def.name or item.id
+        local tooltip = def and def.description or "No description."
+        if item.reqRep then
+            tooltip = tooltip .. " (Req: " .. item.reqRep.faction .. " rep " .. tostring(item.reqRep.level) .. ")"
+        end
 
-    -- Background
-    djui_hud_set_color(0, 0, 0, 200)
-    djui_hud_render_rect(cx - 150, cy - 100, 300, 200)
+        table.insert(items, {
+            id = item.id,
+            name = name,
+            cost = item.cost,
+            reqRep = item.reqRep,
+            right_text = tostring(item.cost) .. "c",
+            tooltip = tooltip
+        })
+    end
 
-    -- Title
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("SHOP", cx - 20, cy - 90, 1)
-
-    -- Coins
-    local coins = Inventory.get_count(gMarioStates[0], "coin_bag")
-    djui_hud_set_color(255, 215, 0, 255)
-    djui_hud_print_text("Coins: " .. coins, cx - 140, cy - 90, 1)
-
-    -- Items
-    local y = cy - 60
-    -- Simple scroll or limit? For now, render first 5 or logic?
-    -- Let's just render all and overflow (Prototype)
-    -- Or simplistic scroll logic based on selection
-
-    local startIdx = 1
-    if SELECTION > 5 then startIdx = SELECTION - 4 end
-
-    for i = startIdx, math.min(startIdx + 4, #SHOP_ITEMS) do
-        local itemData = SHOP_ITEMS[i]
-        local def = _G.Inventory.items[itemData.id]
+    local renderDetails = function(x, y, selItem)
+        local def = _G.Inventory and _G.Inventory.items[selItem.id]
         if def then
-            local name = def.name
-            local price = itemData.price
+            djui_hud_set_color(0, 255, 255, 255)
+            djui_hud_print_text(def.name, x, y, 1)
 
-            if i == SELECTION then
-                djui_hud_set_color(0, 255, 0, 255)
-                djui_hud_print_text("> " .. name .. " (" .. price .. ")", cx - 100, y, 1)
-            else
-                djui_hud_set_color(200, 200, 200, 255)
-                djui_hud_print_text("  " .. name .. " (" .. price .. ")", cx - 100, y, 1)
-            end
-            y = y + 20
+            djui_hud_set_color(200, 200, 200, 255)
+            local desc = def.description or "No description."
+            UIToolkit.draw_wrapped_text(desc, x, y + 40, 22, 0.8)
+        end
+
+        djui_hud_set_color(255, 255, 0, 255)
+        djui_hud_print_text("Cost: " .. tostring(selItem.cost) .. " coins", x, y + 100, 0.8)
+
+        if selItem.reqRep then
+             djui_hud_set_color(255, 100, 100, 255)
+             djui_hud_print_text("Requires " .. selItem.reqRep.faction .. ": " .. tostring(selItem.reqRep.level), x, y + 120, 0.8)
         end
     end
 
-    djui_hud_set_color(200, 200, 200, 255)
-    djui_hud_print_text("A: Buy  B: Exit", cx - 60, cy + 80, 1)
+    UIToolkit.draw_menu(CURRENT_SHOP.name, items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Buy  B: Close", "Purchase items and equipment with your coins here.")
 end
 
--- UI Input
-function shop_update(m)
+function shop_ui_update(m)
     if m.playerIndex ~= 0 then return end
-    if not SHOP_OPEN then return end
+    if not UI_VISIBLE or not CURRENT_SHOP then return end
+    if not _G.UIToolkit then return end
 
-    if m.action ~= ACT_WAITING_FOR_DIALOG then
-        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #CURRENT_SHOP.items, OPEN_TIMER)
+    SELECTION = sel
+    OPEN_TIMER = timer
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #CURRENT_SHOP.items)
+
+    if act then
+       local item = CURRENT_SHOP.items[SELECTION]
+       if item then
+           -- Check rep
+           local canBuy = true
+           if item.reqRep and _G.Reputation then
+                local currentRep = Reputation.get(m, item.reqRep.faction)
+                if currentRep < item.reqRep.level then
+                    djui_chat_message_create("Not enough reputation!")
+                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                    canBuy = false
+                end
+           end
+
+           if canBuy and m.numCoins >= item.cost then
+               m.numCoins = m.numCoins - item.cost
+               if _G.Inventory then
+                   Inventory.add_item(m, item.id, 1)
+               end
+               play_sound(SOUND_GENERAL_COIN, m.marioObj.header.gfx.cameraToObject)
+               djui_chat_message_create("Bought " .. item.id)
+           elseif canBuy then
+               play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+               djui_chat_message_create("Not enough coins!")
+           end
+       end
     end
 
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        SELECTION = SELECTION + 1
-        if SELECTION > #SHOP_ITEMS then SELECTION = 1 end
+    if close then
+        UI_VISIBLE = false
+        CURRENT_SHOP = nil
     end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        SELECTION = SELECTION - 1
-        if SELECTION < 1 then SELECTION = #SHOP_ITEMS end
+end
+
+-- NPC Behavior
+function bhv_shopkeeper_init(obj)
+    obj.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj.oInteractionSubtype = INT_SUBTYPE_NPC
+    obj.hitboxRadius = 150
+    obj.hitboxHeight = 150
+    obj.oIntangibleTimer = 0
+    obj.oGravity = 2.5
+    obj.oFriction = 0.8
+    obj.oBuoyancy = 1.3
+
+    -- Assign shop ID based on BParam1
+    if obj.oBehParams2ndByte == 1 then
+        obj.oShopId = "toad_faction"
+    else
+        obj.oShopId = "general"
     end
+end
 
-    if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
-        local itemData = SHOP_ITEMS[SELECTION]
-        local coins = Inventory.get_count(m, "coin_bag")
+function bhv_shopkeeper_loop(obj)
+    local m = gMarioStates[0]
 
-        if coins >= itemData.price then
-            if Inventory.add_item(m, itemData.id, 1) then
-                Inventory.remove_item(m, "coin_bag", itemData.price)
-                play_sound(SOUND_MENU_STAR_SOUND, m.marioObj.header.gfx.cameraToObject)
-                djui_chat_message_create("Bought " .. itemData.id)
-            else
-                play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
-            end
-        else
-            play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
-            djui_chat_message_create("Not enough coins!")
+    -- Basic physics
+    obj.oFaceAngleYaw = obj.oFaceAngleYaw + 0x100
+
+    -- Distance check for interaction
+    local dist = dist_between_objects(obj, m.marioObj)
+    if dist < 300 then
+        -- Render interaction prompt
+        if not UI_VISIBLE then
+            -- Simplified prompt
+            -- In a real scenario, use djui to draw text in 3D space or on HUD
+        end
+
+        -- D-pad UP to interact (B_BUTTON used for UI close, so we use something else to open)
+        if (m.controller.buttonPressed & D_JPAD) ~= 0 and m.action ~= ACT_WAITING_FOR_DIALOG then
+             Shop.open(obj.oShopId)
         end
     end
+end
 
-    if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-        SHOP_OPEN = false
-        set_mario_action(m, ACT_IDLE, 0)
+-- Spawn test NPC in Castle Grounds
+function shop_on_level_init()
+    if gNetworkPlayers[0].currLevelNum == LEVEL_CASTLE_GROUNDS then
+        -- Spawn General Store
+        local obj = spawn_non_sync_object(
+            id_bhvToadMessage,
+            E_MODEL_TOAD_PLAYER,
+            -1000, 260, 2000,
+            bhv_shopkeeper_init,
+            bhv_shopkeeper_loop
+        )
+        if obj then
+             obj.oBehParams2ndByte = 0
+             obj.header.gfx.scale.x = 2.0
+             obj.header.gfx.scale.y = 2.0
+             obj.header.gfx.scale.z = 2.0
+        end
+
+        -- Spawn Faction Store
+        local obj2 = spawn_non_sync_object(
+            id_bhvToadMessage,
+            E_MODEL_TOAD_PLAYER,
+            1000, 260, 2000,
+            bhv_shopkeeper_init,
+            bhv_shopkeeper_loop
+        )
+        if obj2 then
+             obj2.oBehParams2ndByte = 1
+             obj2.header.gfx.scale.x = 2.0
+             obj2.header.gfx.scale.y = 2.0
+             obj2.header.gfx.scale.z = 2.0
+        end
     end
 end
 
 hook_event(HOOK_ON_HUD_RENDER, shop_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, shop_update)
+hook_event(HOOK_BEFORE_MARIO_UPDATE, shop_ui_update)
+hook_event(HOOK_ON_LEVEL_INIT, shop_on_level_init)

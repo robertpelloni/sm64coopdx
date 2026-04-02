@@ -1,51 +1,39 @@
-# Project Dashboard
-
-## Project Directory Structure
-
-The project structure is organized as follows:
-
--   **`src/`**: Contains the source code for the game.
-    -   `src/pc/`: Platform-specific code (PC port).
-    -   `src/game/`: Game logic and behaviors.
-    -   `src/engine/`: Core engine components.
--   **`mods/`**: Contains Lua mods for gameplay mechanics and systems.
-    -   `mods/mechanic_boost/`: Sonic Boost mechanic (Speed/Meter).
-    -   `mods/mechanic_fludd/`: FLUDD mechanic (Hover/Rocket/Turbo).
-    -   `mods/mechanic_glide/`: Spyro Glide mechanic.
-    -   `mods/mechanic_gravity/`: Launch Star mechanic (Galaxy).
-    -   `mods/mechanic_hookshot/`: Hookshot mechanic.
-    -   `mods/mechanic_possession/`: Entity Possession mechanic.
-    -   `mods/mechanic_telekinesis/`: Telekinesis mechanic (Psychonauts style).
-    -   `mods/mechanic_transformation/`: Transformation API (Banjo style).
-    -   `mods/mechanic_vehicle/`: Vehicle mechanic (Zoomer).
-    -   `mods/system_achievements/`: Achievements and Titles system.
-    -   `mods/system_classes/`: RPG Class system (Warrior/Mage/Rogue).
-    -   `mods/system_guilds/`: Guild system, Chat, and Nametags.
-    -   `mods/system_instancing/`: Instancing system (Dimensions).
-    -   `mods/system_inventory/`: Universal Inventory system and Economy.
-    -   `mods/system_optimization/`: Client-side interest management/culling.
-    -   `mods/system_perks/`: Perks/Badges system.
-    -   `mods/system_quests/`: Quest system API and tracker.
-    -   `mods/system_shop/`: NPC Shop system.
-    -   `mods/system_trading/`: Player Trading system.
-    -   `mods/system_weapon_wheel/`: Weapon Wheel UI.
-    -   `mods/system_world/`: Connected World (Portals).
--   **`include/`**: Header files.
--   **`levels/`**: Level data and scripts.
--   **`actors/`**: Actor data and models.
--   **`sound/`**: Sound data and sequences.
--   **`textures/`**: Texture assets.
--   **`tools/`**: Build tools and scripts.
-
-## Submodules
-
-There are no submodules configured in this repository.
-
-## MMORPG Roadmap
-
-See `ROADMAP_MMORPG.md` for the detailed plan and feature breakdown.
+# Project Dashboard & Directory Structure
 
 ## Version Information
+**Current Build:** v1.22
+**Last Updated:** [Current Session Date]
 
-Current Version: `v1.7` (Internal Version: 44)
-See `src/pc/network/version.h`.
+## Submodule Status
+*Currently, there are no external git submodules active in this project.*
+*(Note: The previous `bobcoin` submodule was completely scrubbed from the project to reduce bloat and security risks).*
+
+## Directory Structure
+The SM64 MMORPG project consists of a C-based engine and a massive Lua-based modding API.
+
+```
+/
+├── baserom.us.z64           # Required asset ROM (User provided)
+├── build/                   # Compilation artifacts
+├── src/                     # C Engine Source Code
+│   ├── pc/                  # PC Port specific code (Networking, GFX, Audio)
+│   │   ├── lua/             # Lua C-Bindings
+│   │   └── network/         # Network Synchronization Logic
+│   ├── game/                # Original SM64 Game Logic
+│   └── engine/              # Math and rendering engine
+├── mods/                    # MMORPG Systems (Lua)
+│   ├── system_ui/           # Core UIToolkit
+│   ├── system_inventory/    # Universal Storage
+│   ├── system_classes/      # RPG Classes & Magic
+│   ├── system_combat/       # Health, Mana, Damage
+│   ├── system_progression/  # XP, Levels, Stats
+│   ├── system_economy/      # Shops, Auction House, Trading
+│   ├── system_social/       # Guilds, Party, Mailbox
+│   ├── system_housing/      # Instanced Player Housing
+│   ├── mechanic_*/          # Core gameplay mechanics (Weapons, Mounts, Stealth, etc.)
+│   └── content_*/           # Dungeons, Raid Bosses, Tower of Trials
+├── AGENTS.md                # AI Agent Instructions
+├── README.md                # Comprehensive Game Manual
+├── VISION.md                # Project Goals
+└── VERSION.md               # Single Source of Truth for Versioning
+```
