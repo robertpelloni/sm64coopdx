@@ -5,23 +5,18 @@
 **Status:** In Progress (Relentless Execution Mode)
 
 ### Extensive Analysis & Findings
-During this continuous execution session, I have analyzed the entire project architecture and the user's dense, repetitive directives. The user's primary mandate is to build an insanely robust, deeply documented, UI-complete MMORPG out of the SM64 engine.
+During this continuous execution session, the user's primary mandate to relentlessly expand the MMORPG project and eliminate missing or incomplete UI hooks has driven the development of several missing UI modes. Code review highlighted that providing only an "Inbox" for the Mail system violated the constraint of 100% full implementation.
 
 **Key Architectural Observations:**
-1. **UI Dominance:** The project relies on `mods/system_ui/main.lua` (`UIToolkit`). Previously, systems used raw `djui` calls, leading to messy, overlapping menus. I have successfully refactored nearly every system to use `UIToolkit`, ensuring consistent text wrapping, debouncing (`OPEN_TIMER`), and hover-tooltips.
-2. **State Management Vulnerabilities:** I discovered and patched a severe integer underflow vulnerability in the Auction House and Mail commands. Because Lua's `tonumber()` allows negative inputs, players could execute `/ah sell wood -500 1000`, causing the `Inventory.remove_item` function to mathematically *add* 500 wood, breaking the economy. All inputs are now validated (`> 0`).
-3. **Data Serialization Limits:** Systems relying on `mod_storage` (Mail, Housing, AH) serialize data into flat strings separated by `|` and `;`. This requires aggressive string sanitization (`escape_str`) to prevent players from injecting control characters into message bodies and corrupting the save file.
-4. **Git Conflicts:** The C-engine version header (`src/pc/network/version.h`) was a constant source of git merge conflicts. I resolved this by enforcing `VERSION.md` as the single source of truth and writing a python hook (`build_version.py`) to inject it before compilation.
+1. **Multi-Mode UI Pattern:** The `UIToolkit` handles multi-mode menus exceptionally well. I updated `mods/system_mail/ui.lua` to fully implement both "inbox" and "compose" modes. Players can now use `X_BUTTON` to swap between reading mail (and claiming attachments) and drafting mail (and selecting an inventory item to attach).
+2. **Placeholder Logic Debt:** The code review correctly flagged several systems as having "prototype" placeholder logic (e.g., Mounts lacking visuals, the Tower of Trials using 1-hit kills, hardcoded targets in the Mail Compose UI). These placeholders must be systematically replaced with complete logic, visuals, and UI inputs (e.g., integrating `djui_inputbox` for Mail targets and AH pricing).
 
-### Progress Achieved (v1.22 -> v1.23)
-*   **Documentation Overhaul:** Generated a massive suite of instructional files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `GPT.md`, `copilot-instructions.md`) to guide future LLM sessions accurately. Rebuilt `README.md`, `VISION.md`, `ROADMAP_MMORPG.md`, and `TODO.md` to reflect exact state.
-*   **Mechanic: Weapons:** Implemented equippable weapons with durability and hitboxes.
-*   **System: Equipment:** Built `system_equipment` to visually manage equipped weapons and badges, filling a critical UI gap.
-*   **System: Daily Quests:** Implemented procedural daily tasks assigned on login.
-*   **System: Help Encyclopedia:** Built a comprehensive in-game manual.
+### Progress Achieved (v1.23 -> v1.24)
+*   **System: Mailbox UI:** Completely rewrote `system_mail/ui.lua` to feature both Inbox and Compose modes. Added logic to securely attach inventory items to outgoing mail and claim incoming attachments.
+*   **Documentation:** Acknowledged the code review feedback. The project requires a deeper pass to remove all hardcoded "prototype" comments and logic, ensuring every feature is visually represented.
 
 ### Directives for the Next Agent
-The user's excitement and demands are exceptionally high ("Don't ever stop baby!").
-1. Read `AGENTS.md`. You must maintain this velocity.
-2. **Immediate Task:** The Auction House relies on raw chat commands (`/ah sell`). You must build a robust UI for it using `UIToolkit`.
-3. Validate all inputs. Document every line of code you write with extreme detail.
+The user demands perfection and relentless momentum.
+1. **Immediate Task:** You must integrate text input handling (via `djui_inputbox` or a custom D-pad alphabetical spinner) into the Mail "Compose" mode and Auction House "Sell" mode so players can dynamically set targets and prices, replacing the current hardcoded placeholders.
+2. Systematically replace the visual placeholders (e.g., in `mechanic_weapons`, `mechanic_mounts`).
+3. Do not leave *any* feature in a partially implemented state. Update `TODO.md` relentlessly.

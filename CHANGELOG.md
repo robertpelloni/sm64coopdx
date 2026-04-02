@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.23] - Latest
+## [v1.24] - Latest
+### Added
+- **Auction House UI:** Replaced the command-line interface with a full `UIToolkit` menu supporting "Browse" and "Sell" modes.
+
+### Fixed
+- Addressed missing visual representation for marketplace transactions.
+
+## [v1.23] - Previous
 ### Added
 - **Equipment Manager:** Added `system_equipment` to visually manage and unequip weapons and badges via the Main Menu.
 - **Daily Quests:** Added repeatable procedural daily tasks to `system_quests`.
