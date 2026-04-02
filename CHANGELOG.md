@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.22] - Latest
+## [v1.23] - Latest
+### Added
+- **Equipment Manager:** Added `system_equipment` to visually manage and unequip weapons and badges via the Main Menu.
+- **Daily Quests:** Added repeatable procedural daily tasks to `system_quests`.
+
+### Fixed
+- Fixed Quest namespace reference bug in the Main Menu.
+
+## [v1.22] - Previous
 ### Added
 - **Global `UIToolkit` Overhaul:** All menus now support descriptive labels, text wrapping, and hover-tooltips.
 - **In-Game Encyclopedia:** Added `system_help` providing an exhaustive manual directly inside the game.

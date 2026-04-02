@@ -9,6 +9,7 @@ local OPEN_TIMER = 0
 
 -- Define Main Menu Layout
 local menu_items = {
+    { id = "auction_house", name = "Auction House",  action = function() if _G.AuctionHouse then AuctionHouse.toggle_ui() end end, tooltip = "Global asynchronous marketplace." },
     { id = "equipment", name = "Equipment",  action = function() if _G.Equipment then Equipment.toggle_ui() end end, tooltip = "Manage your equipped weapons and badges." },
     { id = "inventory", name = "Inventory",  action = function() if _G.Inventory then Inventory.toggle_ui() end end, tooltip = "View and manage your items." },
     { id = "quests",    name = "Quest Log",  action = function() if _G.Quest then Quest.toggle_ui() end end, tooltip = "Check your ongoing missions." },
