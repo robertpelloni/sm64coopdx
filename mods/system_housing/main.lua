@@ -155,7 +155,7 @@ function on_housing_command(msg)
             djui_chat_message_create("Usage: /house place [item]")
             return true
         end
-        if not Inventory.get_count(m, item) or Inventory.get_count(m, item) <= 0 then
+        if not Inventory.get_item_count(m, item) or Inventory.get_item_count(m, item) <= 0 then
             djui_chat_message_create("You don't have a " .. item)
             return true
         end

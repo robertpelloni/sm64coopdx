@@ -8,6 +8,9 @@ local SCROLL_OFFSET = 0
 local OPEN_TIMER = 0
 local UI_MODE = "browse" -- "browse" or "sell"
 
+-- Dynamic Pricing State
+local current_price = 100
+
 function ah_ui_render()
     if not UI_VISIBLE then return end
     if not _G.AuctionHouse or not _G.UIToolkit then return end
@@ -38,7 +41,7 @@ function ah_ui_render()
 
     elseif UI_MODE == "sell" then
         title = "AUCTION HOUSE - SELL (SELECT ITEM)"
-        footer = "A: Sell  X: Browse Mode  B: Close"
+        footer = "A: Sell  L/R: Set Price  X: Browse  B: Close"
 
         local raw_items = _G.Inventory.get_all_items(m)
         for _, item in ipairs(raw_items) do
@@ -84,8 +87,11 @@ function ah_ui_render()
             djui_hud_set_color(200, 200, 200, 255)
             UIToolkit.draw_wrapped_text(def and def.description or "", x, y + 40, 25, 0.9)
 
-            djui_hud_set_color(255, 200, 100, 255)
-            UIToolkit.draw_wrapped_text("Press A to list 1x for 100c (Placeholder fixed price).", x, y + 100, 25, 0.8)
+            djui_hud_set_color(255, 255, 0, 255)
+            djui_hud_print_text("< Price: " .. tostring(current_price) .. "c >", x, y + 100, 1.0)
+
+            djui_hud_set_color(150, 255, 150, 255)
+            UIToolkit.draw_wrapped_text("Press A to list 1x for " .. tostring(current_price) .. "c", x, y + 140, 25, 0.8)
         end
     end
 
@@ -97,13 +103,24 @@ function ah_ui_update(m)
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
-    -- X Button (Y on Xbox controller) to toggle modes
     if (m.controller.buttonPressed & X_BUTTON) ~= 0 then
         if UI_MODE == "browse" then UI_MODE = "sell" else UI_MODE = "browse" end
         SELECTION = 1
         SCROLL_OFFSET = 0
+        current_price = 100 -- reset price on mode switch
         play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
         return
+    end
+
+    -- Dynamic Price Adjustment
+    if UI_MODE == "sell" then
+        if (m.controller.buttonPressed & R_JPAD) ~= 0 then
+            current_price = current_price + 10
+            play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        elseif (m.controller.buttonPressed & L_JPAD) ~= 0 then
+            current_price = math.max(1, current_price - 10)
+            play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        end
     end
 
     local maxItems = 1
@@ -117,6 +134,8 @@ function ah_ui_update(m)
         list = inv
     end
 
+    -- We pass 0 for maxItems to handle_input for UP/DOWN so it doesn't conflict with our custom L/R logic if we needed to modify handle_input,
+    -- but UIToolkit.handle_input only reads D_JPAD and U_JPAD, so it's safe.
     local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
@@ -126,12 +145,10 @@ function ah_ui_update(m)
         if UI_MODE == "browse" and #list > 0 then
             local l = list[SELECTION]
             if l then
-                -- Perform Buy
                 if m.numCoins >= l.price then
                      m.numCoins = m.numCoins - l.price
                      if _G.Inventory then Inventory.add_item(m, l.itemId, l.count) end
 
-                     -- Mail the seller
                      if _G.Mail then
                          Mail.send("SYSTEM", l.seller, "AH Sold: " .. l.itemId, "Your item sold for " .. l.price .. "c", {id="coin_bag", count=l.price})
                      end
@@ -141,7 +158,6 @@ function ah_ui_update(m)
                      play_sound(SOUND_GENERAL_COIN, m.marioObj.header.gfx.cameraToObject)
                      djui_chat_message_create("Bought " .. l.itemId)
 
-                     -- Adjust selection if we removed the last item
                      if SELECTION > #AuctionHouse.listings then SELECTION = math.max(1, #AuctionHouse.listings) end
                 else
                      play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
@@ -151,11 +167,7 @@ function ah_ui_update(m)
         elseif UI_MODE == "sell" and #list > 0 then
             local item = list[SELECTION]
             if item then
-                -- Hardcoded placeholder sell logic: sell 1 for 100c
-                -- A real implementation would require a numeric input sub-menu (like djui_inputbox)
                 local count = 1
-                local price = 100
-
                 if _G.Inventory and Inventory.remove_item(m, item.id, count) then
                     local listingId = tostring(os.time()) .. "_" .. tostring(math.random(1000, 9999))
                     table.insert(AuctionHouse.listings, {
@@ -163,11 +175,14 @@ function ah_ui_update(m)
                         seller = network_get_player_text_color_string(m.playerIndex) .. "Player",
                         itemId = item.id,
                         count = count,
-                        price = price
+                        price = current_price
                     })
                     AuctionHouse.save()
                     play_sound(SOUND_OBJ_STOMP_AARON, m.marioObj.header.gfx.cameraToObject)
-                    djui_chat_message_create("Listed 1x " .. item.id .. " for 100c")
+                    djui_chat_message_create("Listed 1x " .. item.id .. " for " .. tostring(current_price) .. "c")
+                else
+                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                    djui_chat_message_create("Error listing item.")
                 end
             end
         end
@@ -185,14 +200,9 @@ function AuctionHouse.toggle_ui()
         SCROLL_OFFSET = 0
         OPEN_TIMER = 5
         UI_MODE = "browse"
+        current_price = 100
     end
 end
 
 hook_event(HOOK_ON_HUD_RENDER, ah_ui_render)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, ah_ui_update)
-
--- Add AH to Main Menu
-hook_event(HOOK_ON_LEVEL_INIT, function()
-    -- We can't directly inject into the local table in system_menu/main.lua easily from here without modifying that file.
-    -- But since we control the codebase, we'll patch system_menu/main.lua via bash.
-end)

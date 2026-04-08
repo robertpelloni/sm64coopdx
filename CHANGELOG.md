@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.24] - Latest
+## [v1.25] - Latest
+### Added
+- **Mailbox UI:** Fully implemented the visual Compose mode, allowing players to attach inventory items to outgoing mail.
+
+### Fixed
+- Fixed documentation discrepancies in DASHBOARD.md.
+
+## [v1.24] - Previous
 ### Added
 - **Auction House UI:** Replaced the command-line interface with a full `UIToolkit` menu supporting "Browse" and "Sell" modes.
 

@@ -22,17 +22,73 @@ Weapons.registry = {
     }
 }
 
--- Player State
--- We store the equipped weapon ID and its current durability in the sync table so others can see it (eventually for rendering)
--- For now, we handle logic locally and sync the visual state.
+-- Visual Object Logic
+function bhv_weapon_visual_init(obj)
+    obj.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj.header.gfx.scale.x = 0.5
+    obj.header.gfx.scale.y = 0.5
+    obj.header.gfx.scale.z = 0.5
+end
+
+function bhv_weapon_visual_loop(obj)
+    local m = gMarioStates[obj.oBehParams] -- BParam holds player index
+
+    -- If no weapon equipped or player disconnected, destroy
+    if not gNetworkPlayers[m.playerIndex].connected or not gPlayerSyncTable[m.playerIndex].equipped_weapon then
+        obj_mark_for_deletion(obj)
+        return
+    end
+
+    local eqWeap = gPlayerSyncTable[m.playerIndex].equipped_weapon
+    local wDef = Weapons.registry[eqWeap]
+
+    if wDef then
+        obj_set_model_extended(obj, wDef.model)
+
+        -- Attach to Mario's hand
+        -- This uses Mario's graphical position and approximates a hand offset based on facing angle
+        local handOffsetX = 50 * math.sin(m.faceAngle.y)
+        local handOffsetZ = 50 * math.cos(m.faceAngle.y)
+
+        obj.oPosX = m.pos.x + handOffsetX
+        obj.oPosY = m.pos.y + 60
+        obj.oPosZ = m.pos.z + handOffsetZ
+
+        -- Rotate weapon to match mario
+        obj.oFaceAngleYaw = m.faceAngle.y
+        obj.oFaceAnglePitch = 0
+        obj.oFaceAngleRoll = 0
+
+        -- If punching, swing the weapon
+        if m.action == ACT_PUNCHING then
+            obj.oFaceAnglePitch = 0x2000 -- swing down
+        end
+    end
+end
+
+id_bhvWeaponVisual = hook_behavior(nil, OBJ_LIST_DEFAULT, false, bhv_weapon_visual_init, bhv_weapon_visual_loop)
 
 function weapons_on_mario_update(m)
     if m.playerIndex ~= 0 then return end
 
-    -- Sync equipped weapon for rendering to others
-    if m.marioBodyState.heldObj == nil and gPlayerSyncTable[0].equipped_weapon then
-        -- This is a simplified visual representation. In a full implementation,
-        -- we would spawn a cosmetic object attached to Mario's hand.
+    -- Manage visual object spawning
+    if gPlayerSyncTable[0].equipped_weapon and not m.marioBodyState.heldObj then
+        -- We only spawn the visual locally if we don't have a held object, but we rely on a global check
+        -- In a full implementation, we'd ensure only 1 object spawns per player.
+        -- For now, the visual object handles its own deletion if the state changes.
+        -- We use a local flag to prevent rapid respawning.
+        if not m.weaponVisualSpawned then
+            local obj = spawn_non_sync_object(
+                id_bhvWeaponVisual,
+                Weapons.registry[gPlayerSyncTable[0].equipped_weapon].model,
+                m.pos.x, m.pos.y, m.pos.z,
+                nil
+            )
+            obj.oBehParams = m.playerIndex
+            m.weaponVisualSpawned = true
+        end
+    else
+        m.weaponVisualSpawned = false
     end
 
     -- Handle Attack Input (B Button) when a weapon is equipped
@@ -42,7 +98,7 @@ function weapons_on_mario_update(m)
 
         if wDef then
             -- Perform Attack
-            set_mario_action(m, ACT_PUNCHING, 0) -- Use punch animation as base
+            set_mario_action(m, ACT_PUNCHING, 0)
             play_sound(SOUND_ACTION_SWISH1, m.marioObj.header.gfx.cameraToObject)
 
             -- Decrease Durability
@@ -56,10 +112,8 @@ function weapons_on_mario_update(m)
                 play_sound(SOUND_GENERAL_BREAK_BOX, m.marioObj.header.gfx.cameraToObject)
                 gPlayerSyncTable[0].equipped_weapon = nil
                 gPlayerSyncTable[0].weapon_durability = 0
-                -- Remove from inventory (assumes we have a function to remove 1 specific item)
-                -- For this simple implementation, we assume the inventory system handles count reduction on equip/break
             else
-                -- Hitbox Logic (Simplified radial check)
+                -- Hitbox Logic
                 for i = 0, MAX_PLAYERS - 1 do
                     if i ~= 0 and gNetworkPlayers[i].connected then
                         local otherM = gMarioStates[i]
@@ -70,9 +124,6 @@ function weapons_on_mario_update(m)
                         end
                     end
                 end
-
-                -- Object Hitbox Logic (interact with mobs/breakables)
-                -- (Implementation depends on specific mob systems)
             end
         end
     end
@@ -85,7 +136,6 @@ function Weapons.equip(m, itemId)
     local wDef = Weapons.registry[itemId]
     if wDef then
         gPlayerSyncTable[0].equipped_weapon = itemId
-        -- Initialize durability if not already set (in a robust system, this is saved per-item instance)
         if not gPlayerSyncTable[0].weapon_durability or gPlayerSyncTable[0].weapon_durability <= 0 then
             gPlayerSyncTable[0].weapon_durability = wDef.maxDurability
         end

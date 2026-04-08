@@ -7,6 +7,7 @@ Mail.inbox = {}
 local SAVE_KEY = "player_mail"
 
 function escape_str(s)
+    if not s then return "" end
     s = string.gsub(s, ";", ",")
     s = string.gsub(s, "|", "/")
     return s
@@ -44,59 +45,56 @@ function Mail.save()
     mod_storage_save(SAVE_KEY, data)
 end
 
-function Mail.send(senderName, targetPlayerName, subject, body, attachment)
-    -- In a real implementation, this would send a reliable packet to the server,
-    -- which would append to the target player's offline storage.
-    -- For this local test, we just append to our own inbox to simulate receiving.
+-- Networking hooks for sending mail to other players
+local PACKET_MAIL_SEND = 50
+
+function on_mail_receive(data)
+    -- We received a mail packet from another player (or server)
     table.insert(Mail.inbox, {
+        sender = data.sender,
+        subject = data.subject,
+        body = data.body,
+        attachment = data.attachment
+    })
+    Mail.save()
+    djui_chat_message_create("You have new mail from " .. data.sender .. "!")
+    play_sound(SOUND_GENERAL_COIN, gMarioStates[0].marioObj.header.gfx.cameraToObject)
+end
+
+function Mail.send(senderName, targetPlayerName, subject, body, attachment)
+    -- Find the target player index
+    local targetIndex = -1
+    for i = 0, MAX_PLAYERS - 1 do
+        if gNetworkPlayers[i].connected and network_get_player_text_color_string(i) .. "Player " .. tostring(i) == targetPlayerName then
+            targetIndex = i
+            break
+        end
+    end
+
+    if targetIndex == -1 then
+        -- Player offline or not found, fake sending for local testing if it's SYSTEM
+        if senderName == "SYSTEM" then
+            table.insert(Mail.inbox, {sender=senderName, subject=subject, body=body, attachment=attachment})
+            Mail.save()
+        else
+            djui_chat_message_create("Target player is not online to receive mail.")
+        end
+        return
+    end
+
+    -- Send reliable packet to the target player
+    local msg = {
         sender = senderName,
         subject = subject,
         body = body,
         attachment = attachment
-    })
-    Mail.save()
-end
-
-function on_mail_command(msg)
-    local m = gMarioStates[0]
-    local args = {}
-    for w in string.gmatch(msg, "%S+") do table.insert(args, w) end
-
-    if args[1] == "send" then
-        if #args < 4 then
-            djui_chat_message_create("Usage: /mail send <player> <subject> <body> [itemId] [count]")
-            return true
-        end
-        local target = args[2]
-        local subj = args[3]
-        local body = args[4]
-
-        local att = nil
-        if args[5] and args[6] then
-            local count = tonumber(args[6])
-            if not count or count <= 0 then
-                djui_chat_message_create("Attachment count must be a positive number.")
-                return true
-            end
-
-            if _G.Inventory and Inventory.remove_item(m, args[5], count) then
-                att = {id = args[5], count = count}
-            else
-                djui_chat_message_create("Not enough " .. args[5])
-                return true
-            end
-        end
-
-        Mail.send("Me", target, subj, body, att)
-        djui_chat_message_create("Mail sent to " .. target)
-        return true
-    end
-    return true
+    }
+    network_send_to(targetIndex, true, msg)
 end
 
 function mail_init()
     Mail.load()
+    network_register_packet(PACKET_MAIL_SEND, on_mail_receive)
 end
 
-hook_chat_command("mail", "Mail system", on_mail_command)
 hook_event(HOOK_ON_LEVEL_INIT, mail_init)

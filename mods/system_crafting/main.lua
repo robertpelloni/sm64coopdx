@@ -20,7 +20,7 @@ function Crafting.craft(m, recipeId)
 
     -- Check Ingredients
     for _, ing in ipairs(recipe.ingredients) do
-        local count = Inventory.get_count(m, ing.id)
+        local count = Inventory.get_item_count(m, ing.id)
         if count < ing.count then
             djui_chat_message_create("Missing ingredients: " .. ing.id)
             play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
@@ -72,7 +72,7 @@ function crafting_ui_render()
         ingY = ingY + 20
 
         for _, ing in ipairs(r.ingredients) do
-            local has = Inventory.get_count(gMarioStates[0], ing.id)
+            local has = Inventory.get_item_count(gMarioStates[0], ing.id)
             local name = ing.id
             if _G.Inventory and _G.Inventory.items[ing.id] then name = _G.Inventory.items[ing.id].name end
 
