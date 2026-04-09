@@ -9,26 +9,56 @@ local WIN_HEIGHT = 400
 local ROW_HEIGHT = 20
 local MAX_VISIBLE_ROWS = 12
 
---- Helper to draw wrapped text
+--- Helper to draw wrapped text with basic color code parsing
+--- Format: "\\#RRGGBB\\Text\\#FFFFFF\\"
 function UIToolkit.draw_wrapped_text(text, x, y, maxLen, scale)
+    if not text then return y end
+
     local words = {}
     for word in string.gmatch(text, "%S+") do table.insert(words, word) end
 
-    local line = ""
+    local currentX = x
     local currentY = y
+    local charsOnLine = 0
 
     for _, word in ipairs(words) do
-        if string.len(line) + string.len(word) > maxLen then
-            djui_hud_print_text(line, x, currentY, scale)
-            currentY = currentY + 20 * scale
-            line = word .. " "
-        else
-            line = line .. word .. " "
+        -- Basic Color Code Parsing: \#RRGGBB\
+        local hexColor = string.match(word, "\\#(%x%x%x%x%x%x)\\")
+        local cleanWord = word
+
+        if hexColor then
+            local r = tonumber(string.sub(hexColor, 1, 2), 16)
+            local g = tonumber(string.sub(hexColor, 3, 4), 16)
+            local b = tonumber(string.sub(hexColor, 5, 6), 16)
+            djui_hud_set_color(r, g, b, 255)
+            cleanWord = string.gsub(word, "\\#%x%x%x%x%x%x\\", "")
         end
+
+        -- Default back to standard color if explicitly requested (e.g. \#FFFFFF\)
+        if string.match(word, "\\#FFFFFF\\") then
+            djui_hud_set_color(200, 200, 200, 255)
+            cleanWord = string.gsub(cleanWord, "\\#FFFFFF\\", "")
+        end
+
+        local wordLen = string.len(cleanWord)
+
+        if charsOnLine + wordLen > maxLen then
+            currentY = currentY + 20 * scale
+            currentX = x
+            charsOnLine = 0
+        end
+
+        djui_hud_print_text(cleanWord .. " ", currentX, currentY, scale)
+
+        -- Approximate spacing logic (1 character ~ 8 pixels at scale 1)
+        currentX = currentX + (wordLen + 1) * 8 * scale
+        charsOnLine = charsOnLine + wordLen + 1
+
+        -- Reset color for next word if a code was used, unless we want stateful colors
+        -- For simplicity, we make color codes affect only the word they are attached to
+        djui_hud_set_color(200, 200, 200, 255)
     end
-    if line ~= "" then
-         djui_hud_print_text(line, x, currentY, scale)
-    end
+
     return currentY + 20 * scale -- returns bottom Y
 end
 
@@ -165,6 +195,7 @@ function UIToolkit.handle_input(m, selection, maxItems, debounceTimer)
 
     if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
         close = true
+        play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         set_mario_action(m, ACT_IDLE, 0)
     end
 

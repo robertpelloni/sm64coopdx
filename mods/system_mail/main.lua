@@ -56,7 +56,7 @@ function on_mail_receive(data)
         body = data.body,
         attachment = data.attachment
     })
-    Mail.save()
+    if _G.SaveManager then SaveManager.request_save() else SafeSave("Mail") end
     djui_chat_message_create("You have new mail from " .. data.sender .. "!")
     play_sound(SOUND_GENERAL_COIN, gMarioStates[0].marioObj.header.gfx.cameraToObject)
 end
@@ -75,7 +75,7 @@ function Mail.send(senderName, targetPlayerName, subject, body, attachment)
         -- Player offline or not found, fake sending for local testing if it's SYSTEM
         if senderName == "SYSTEM" then
             table.insert(Mail.inbox, {sender=senderName, subject=subject, body=body, attachment=attachment})
-            Mail.save()
+            if _G.SaveManager then SaveManager.request_save() else SafeSave("Mail") end
         else
             djui_chat_message_create("Target player is not online to receive mail.")
         end

@@ -189,7 +189,7 @@ function mail_ui_update(m)
                 end
 
                 table.remove(Mail.inbox, SELECTION)
-                Mail.save()
+                if _G.SaveManager then SaveManager.request_save() else SafeSave("Mail") end
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
 
                 if SELECTION > #Mail.inbox then SELECTION = math.max(1, #Mail.inbox) end

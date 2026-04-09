@@ -67,7 +67,7 @@ function on_ah_command(msg)
                 count = count,
                 price = price
             })
-            AuctionHouse.save()
+            if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
             djui_chat_message_create("Listed " .. count .. "x " .. itemId .. " for " .. price .. "c")
         else
             djui_chat_message_create("Not enough " .. itemId)
@@ -94,7 +94,7 @@ function on_ah_command(msg)
                      end
 
                      table.remove(AuctionHouse.listings, i)
-                     AuctionHouse.save()
+                     if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
                      djui_chat_message_create("Bought " .. l.itemId)
                      return true
                  else

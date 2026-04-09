@@ -174,7 +174,7 @@ function on_housing_command(msg)
             if network_is_server() then Housing.save_guild(gName)
             else djui_chat_message_create("Only Server Host can save Guild Hall changes in prototype.") end
         else
-            Housing.save()
+            if _G.SaveManager then SaveManager.request_save() else SafeSave("Housing") end
         end
 
         djui_chat_message_create("Placed " .. item)
@@ -183,7 +183,7 @@ function on_housing_command(msg)
     elseif cmd == "clear" then
         if not _G.Housing.active or _G.Housing.houseId ~= 0 then return true end
         _G.Housing.furniture = {}
-        Housing.save()
+        if _G.SaveManager then SaveManager.request_save() else SafeSave("Housing") end
         warp_to_level(LEVEL_CASTLE_COURTYARD, 1, 0)
         djui_chat_message_create("Cleared house.")
 

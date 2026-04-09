@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.25] - Latest
+## [v1.26] - Latest
+### Added
+- **Dynamic UI Inputs:** Added D-pad price adjustment to the Auction House and live player target selection to Mail Compose.
+- **Visual Mechanics:** Weapons and Mounts now spawn actual models (swords, Yoshis) attached to the player instead of using invisible prototypes.
+
+### Fixed
+- Fixed a fatal Lua crash in `system_crafting` and `system_housing` caused by an incorrect inventory API call.
+- Fixed `Mail.send` to actually transmit network packets rather than faking local delivery.
+
+## [v1.25] - Previous
 ### Added
 - **Mailbox UI:** Fully implemented the visual Compose mode, allowing players to attach inventory items to outgoing mail.
 

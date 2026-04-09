@@ -98,9 +98,6 @@ function economy_update(m)
         lastCoinCount = m.numCoins
     end
 
-    if gGlobalTimer % 900 == 0 then
-        Inventory.save()
-    end
 
     if m.numCoins > lastCoinCount then
         local diff = m.numCoins - lastCoinCount

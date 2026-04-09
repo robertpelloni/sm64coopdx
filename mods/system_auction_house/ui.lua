@@ -154,7 +154,7 @@ function ah_ui_update(m)
                      end
 
                      table.remove(AuctionHouse.listings, SELECTION)
-                     AuctionHouse.save()
+                     if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
                      play_sound(SOUND_GENERAL_COIN, m.marioObj.header.gfx.cameraToObject)
                      djui_chat_message_create("Bought " .. l.itemId)
 
@@ -177,7 +177,7 @@ function ah_ui_update(m)
                         count = count,
                         price = current_price
                     })
-                    AuctionHouse.save()
+                    if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
                     play_sound(SOUND_OBJ_STOMP_AARON, m.marioObj.header.gfx.cameraToObject)
                     djui_chat_message_create("Listed 1x " .. item.id .. " for " .. tostring(current_price) .. "c")
                 else
