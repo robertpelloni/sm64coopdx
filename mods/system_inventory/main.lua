@@ -1,77 +1,90 @@
--- Initialize System
--- require statements removed as the mod loader handles file execution
+-- name: System - Universal Inventory
+-- description: Core inventory management.
 
--- Test Data
-if _G.Inventory then
-    -- Basic
-    Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 1000)
-    Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
+_G.Inventory = {}
+Inventory.items = {}
 
-    -- Weapons
-    Inventory.define_item("blaster", "Blaster", "Standard issue sidearm.", 1)
-    Inventory.define_item("wrench", "OmniWrench", "Fixes everything.", 1)
-    Inventory.define_item("hookshot", "Hookshot", "Grapple to distant surfaces.", 1)
+-- Load/Save mechanics
+local SAVE_KEY = "player_inventory"
 
-    -- FLUDD Nozzles
-    Inventory.define_item("nozzle_hover", "Hover Nozzle", "Provides aerial lift.", 1)
-    Inventory.define_item("nozzle_rocket", "Rocket Nozzle", "Launch high into the air.", 1)
-    Inventory.define_item("nozzle_turbo", "Turbo Nozzle", "Move at high speeds.", 1)
-
-    -- Badges
-    Inventory.define_item("badge_speed", "Badge: Agility", "Run 20% faster.", 1)
-    Inventory.define_item("badge_feather", "Badge: Feather", "Fall slower.", 1)
-    Inventory.define_item("badge_health", "Badge: Regen", "Regenerate health over time.", 1)
-    Inventory.define_item("badge_metal", "Badge: Metal", "Become heavy and indestructible.", 1)
-    Inventory.define_item("badge_wing", "Badge: Wing", "Fly high!", 1)
-
-    -- Transformations
-    Inventory.define_item("totem_termite", "Totem: Termite", "Transform into a bug.", 1)
-    Inventory.define_item("totem_goomba", "Totem: Goomba", "Transform into a Goomba.", 1)
+function Inventory.define_item(id, name, description, value)
+    Inventory.items[id] = {
+        id = id,
+        name = name,
+        description = description,
+        value = value or 0
+    }
 end
 
--- Chat Command for testing
-function on_give_item(msg)
+function Inventory.add_item(m, itemId, count)
+    if m.playerIndex ~= 0 then return end
+    local current = gPlayerSyncTable[0]["inv_" .. itemId] or 0
+    gPlayerSyncTable[0]["inv_" .. itemId] = current + count
+end
+
+function Inventory.remove_item(m, itemId, count)
+    if m.playerIndex ~= 0 then return end
+    local current = gPlayerSyncTable[0]["inv_" .. itemId] or 0
+    if current >= count then
+        gPlayerSyncTable[0]["inv_" .. itemId] = current - count
+        return true
+    end
+    return false
+end
+
+function Inventory.get_item_count(m, itemId)
+    return gPlayerSyncTable[0]["inv_" .. itemId] or 0
+end
+
+function Inventory.get_all_items(m)
+    local list = {}
+    if m.playerIndex ~= 0 then return list end
+
+    for k, v in pairs(Inventory.items) do
+        local count = gPlayerSyncTable[0]["inv_" .. k] or 0
+        if count > 0 then
+            table.insert(list, {id = k, count = count, name = v.name})
+        end
+    end
+    return list
+end
+
+function Inventory.save()
     local m = gMarioStates[0]
-    local id = "coin_bag"
-    local amount = 1
-
-    -- Helper to match
-    if msg == "mushroom" then id = "mushroom" end
-    if msg == "blaster" then id = "blaster" end
-    if msg == "wrench" then id = "wrench" end
-    if msg == "hookshot" then id = "hookshot" end
-    if msg == "speed" then id = "badge_speed" end
-    if msg == "feather" then id = "badge_feather" end
-    if msg == "health" then id = "badge_health" end
-    if msg == "metal" then id = "badge_metal" end
-    if msg == "wing" then id = "badge_wing" end
-    if msg == "totem" then id = "totem_termite" end
-    if msg == "goomba" then id = "totem_goomba" end
-
-    -- FLUDD
-    if msg == "hover" then id = "nozzle_hover" end
-    if msg == "rocket" then id = "nozzle_rocket" end
-    if msg == "turbo" then id = "nozzle_turbo" end
-
-    if msg == "save" then
-        Inventory.save()
-        djui_chat_message_create("Saved.")
-        return true
+    local data = ""
+    local items = Inventory.get_all_items(m)
+    for _, item in ipairs(items) do
+        data = data .. item.id .. ":" .. tostring(item.count) .. ";"
     end
-    if msg == "load" then
-        Inventory.load()
-        djui_chat_message_create("Loaded.")
-        return true
-    end
-
-    if _G.Inventory then
-        Inventory.add_item(m, id, amount)
-        djui_chat_message_create("Gave " .. amount .. " " .. id)
-    else
-        djui_chat_message_create("Inventory system not loaded.")
-    end
-    return true
+    mod_storage_save(SAVE_KEY, data)
 end
+
+function Inventory.load()
+    local data = mod_storage_load(SAVE_KEY)
+    if data and data ~= "" then
+        for str in string.gmatch(data, "([^;]+)") do
+            local colon = string.find(str, ":")
+            if colon then
+                local id = string.sub(str, 1, colon - 1)
+                local count = tonumber(string.sub(str, colon + 1))
+                if id and count then
+                    gPlayerSyncTable[0]["inv_" .. id] = count
+                end
+            end
+        end
+    end
+end
+
+-- Initialize System Definitions
+Inventory.define_item("coin_bag", "Coin Bag", "A bag full of coins.", 1000)
+Inventory.define_item("mushroom", "Mushroom", "A weird mushroom.", 5)
+Inventory.define_item("potion_mana", "Mana Potion", "Restores 50 Mana.", 10)
+Inventory.define_item("potion_health", "Health Potion", "Restores Health.", 10)
+Inventory.define_item("wood", "Wood Log", "Gathered from trees.", 99)
+
+-- Weapons Registration
+Inventory.define_item("weap_sword", "Iron Sword", "A basic melee weapon. Equip to use. Has durability.", 100)
+Inventory.define_item("weap_hammer", "Heavy Hammer", "A slow but powerful blunt weapon. Equip to use. Has durability.", 150)
 
 -- Economy Logic
 local lastCoinCount = 0
@@ -79,19 +92,13 @@ local lastCoinCount = 0
 function economy_update(m)
     if m.playerIndex ~= 0 then return end
 
-    -- Load on first frame (simplified init check)
     if not _G.INVENTORY_LOADED then
         Inventory.load()
         _G.INVENTORY_LOADED = true
         lastCoinCount = m.numCoins
     end
 
-    -- Autosave every 30 seconds (30 * 30 frames)
-    if gGlobalTimer % 900 == 0 then
-        Inventory.save()
-    end
 
-    -- Coin Collection
     if m.numCoins > lastCoinCount then
         local diff = m.numCoins - lastCoinCount
         Inventory.add_item(m, "coin_bag", diff)
@@ -101,5 +108,4 @@ function economy_update(m)
     end
 end
 
-hook_chat_command("give_item", "Give an item (test)", on_give_item)
 hook_event(HOOK_MARIO_UPDATE, economy_update)

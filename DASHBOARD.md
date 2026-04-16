@@ -48,6 +48,8 @@ There are no submodules configured in this repository. The previously included `
 See `ROADMAP_MMORPG.md` for the detailed plan and feature breakdown.
 
 ## Version Information
+**Current Build:** v1.24
+**Last Updated:** $(date +"%Y-%m-%d")
 
 Current Version: `v1.8`
 See `VERSION.md` and `CHANGELOG.md`.

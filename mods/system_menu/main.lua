@@ -1,8 +1,10 @@
 -- name: System - Main Menu
--- description: Centralized UI for accessing MMORPG features.
+-- description: Centralized hub for accessing all major UIs (Inventory, Quests, Guilds, Classes, Settings).
+-- depends: system_ui
 
-local MENU_OPEN = false
+local UI_VISIBLE = false
 local SELECTION = 1
+<<<<<<< HEAD
 
 local OPTIONS = {
     {
@@ -56,11 +58,31 @@ local OPTIONS = {
         description = "Close the menu.",
         action = function() MENU_OPEN = false end
     }
+=======
+local SCROLL_OFFSET = 0
+local OPEN_TIMER = 0
+
+-- Define Main Menu Layout
+local menu_items = {
+    { id = "auction_house", name = "Auction House",  action = function() if _G.AuctionHouse then AuctionHouse.toggle_ui() end end, tooltip = "Global asynchronous marketplace." },
+    { id = "equipment", name = "Equipment",  action = function() if _G.Equipment then Equipment.toggle_ui() end end, tooltip = "Manage your equipped weapons and badges." },
+    { id = "inventory", name = "Inventory",  action = function() if _G.Inventory then Inventory.toggle_ui() end end, tooltip = "View and manage your items." },
+    { id = "quests",    name = "Quest Log",  action = function() if _G.Quest then Quest.toggle_ui() end end, tooltip = "Check your ongoing missions." },
+    { id = "classes",   name = "Classes",    action = function() if _G.Classes then Classes.toggle_ui() end end, tooltip = "Manage your class and abilities." },
+    { id = "guilds",    name = "Guilds",     action = function() if _G.Guilds then Guilds.toggle_ui() end end, tooltip = "Socialize with your guild." },
+    { id = "party",     name = "Party",      action = function() if _G.Party then Party.toggle_ui() end end, tooltip = "Manage your current party." },
+    { id = "stats",     name = "Stats",      action = function() if _G.Progression then Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
+    { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
+    { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
+    { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." }
+>>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
 }
 
-function menu_render()
-    if not MENU_OPEN then return end
+function main_menu_render()
+    if not UI_VISIBLE then return end
+    if not _G.UIToolkit then return end
 
+<<<<<<< HEAD
     local w = djui_hud_get_screen_width()
     local h = djui_hud_get_screen_height()
     local cx = w / 2
@@ -104,14 +126,24 @@ function menu_render()
         local descW = djui_hud_measure_text(selOpt.description)
         -- Center it roughly
         djui_hud_print_text(selOpt.description, cx - descW/2, cy + 140, 1)
+=======
+    local renderDetails = function(x, y, selItem)
+        djui_hud_set_color(255, 255, 255, 255)
+        djui_hud_print_text(selItem.name, x, y, 1)
+        djui_hud_set_color(200, 200, 200, 255)
+        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 22, 0.8)
+>>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
+
+    UIToolkit.draw_menu("MAIN MENU", menu_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Central Hub for all your character needs.")
 end
 
-function menu_update(m)
+function main_menu_update(m)
     if m.playerIndex ~= 0 then return end
 
-    -- Toggle: L + START
+    -- Toggle Menu
     if (m.controller.buttonDown & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
+<<<<<<< HEAD
         MENU_OPEN = not MENU_OPEN
         if MENU_OPEN then
             -- Close overlapping UIs
@@ -123,12 +155,20 @@ function menu_update(m)
             end
 
             set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+=======
+        UI_VISIBLE = not UI_VISIBLE
+        if UI_VISIBLE then
+            SELECTION = 1
+            SCROLL_OFFSET = 0
+            OPEN_TIMER = 5
+>>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
         else
             set_mario_action(m, ACT_IDLE, 0)
         end
         return
     end
 
+<<<<<<< HEAD
     if not MENU_OPEN then return end
 
     -- Force freeze
@@ -177,8 +217,30 @@ function menu_update(m)
     if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
         MENU_OPEN = false
         set_mario_action(m, ACT_IDLE, 0)
+=======
+    if not UI_VISIBLE then return end
+    if not _G.UIToolkit then return end
+
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #menu_items, OPEN_TIMER)
+    SELECTION = sel
+    OPEN_TIMER = timer
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #menu_items)
+
+    if act then
+        play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        local item = menu_items[SELECTION]
+        if item and item.action then
+            UI_VISIBLE = false
+            set_mario_action(m, ACT_IDLE, 0)
+            item.action()
+        end
+    end
+
+    if close then
+        UI_VISIBLE = false
+>>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
 end
 
-hook_event(HOOK_ON_HUD_RENDER, menu_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, menu_update)
+hook_event(HOOK_ON_HUD_RENDER, main_menu_render)
+hook_event(HOOK_BEFORE_MARIO_UPDATE, main_menu_update)
