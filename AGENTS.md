@@ -28,6 +28,7 @@
 
 5.  **Version Control**:
     *   Increment version numbers in `src/pc/network/version.h` and `VERSION.md`.
+    *   Always refer to `VERSION.md` as the single source of truth for the project version.
     *   Commit messages should be descriptive: "Feat: Add Config System", "Fix: Inventory Input Bleed".
 
 6.  **Submodules**:

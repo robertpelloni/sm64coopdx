@@ -1,4 +1,5 @@
 # Deployment Instructions
+*Current Project Version: Reference VERSION.md for the single source of truth.*
 
 ## Prerequisites
 *   A Linux environment (Debian/Ubuntu recommended) or MSYS2 for Windows.

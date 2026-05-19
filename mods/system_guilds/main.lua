@@ -42,6 +42,12 @@ end
 
 hook_event(HOOK_ON_PACKET_RECEIVE, on_guild_packet)
 
+-- Includes
+if _G.GuildBank == nil then
+    -- It assumes bank.lua and bank_ui.lua are loaded by the loader if placed in the folder,
+    -- but we can ensure global access is ready.
+end
+
 -- Commands
 function on_guild_command(msg)
     local m = gMarioStates[0]

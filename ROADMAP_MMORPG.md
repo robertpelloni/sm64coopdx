@@ -1,4 +1,5 @@
 # Roadmap to MMORPG: The Definitive 3D Platformer Collection
+*Current Project Version: Reference VERSION.md for the single source of truth.*
 
 ## Vision
 The ultimate goal of `sm64coopdx` is to evolve into a massive multiplayer online world ("MMORPG") that integrates the best mechanics from the entire history of 3D platformers.
@@ -52,4 +53,4 @@ Universal Inventory, Guilds, Parties, Trading, Mail, Housing, Fishing, Mining, C
 5.  **Equipment Manager UI:** **Pending.**
 
 ## Summary
-The project is structurally robust and feature-rich. Immediate next steps involve UI hookups for the Auction House, Mail attachments, an Equipment Manager, and generating Daily Quests.
+The project is structurally robust and feature-rich. Immediate next steps involve refining UI hookups like text input for the Auction House and Mail attachments. Guild Banks are now operational.

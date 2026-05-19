@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.9 (Current)
+## v1.10 (Current)
+- **New Feature: Guild Bank**: Shared storage for guild members via `/bank`.
+
+## v1.9
 - **New Feature: Party System**: Group up with `/party`. Includes Party Chat (`/p`), HUD Health Bars, and Friendly Fire protection.
 - **New Feature: Admin System**: Host-only tools for Kicking, Banning, and Teleporting players via command (`/admin`) or UI.
 - **Main Menu**: Added Party and Admin options.

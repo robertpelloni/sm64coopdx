@@ -1,5 +1,6 @@
 # Claude Specific Instructions
 *Reference `AGENTS.md` for global rules.*
+*Current Project Version: Reference VERSION.md for the single source of truth.*
 
 1. **Analytical Depth:** Utilize your deep reasoning capabilities to analyze the Lua architecture for race conditions, especially regarding `mod_storage` asynchronous saves.
 2. **Refactoring:** Proactively identify redundant code blocks across different mods and suggest/implement consolidations into `system_ui` or a new `system_utils` module.

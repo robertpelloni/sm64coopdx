@@ -1,5 +1,6 @@
 # GitHub Copilot Instructions
 *Reference `AGENTS.md` for global rules.*
+*Current Project Version: Reference VERSION.md for the single source of truth.*
 
 When generating code completions for this project:
 1. Prefer using `_G.UIToolkit` for any new UI code.

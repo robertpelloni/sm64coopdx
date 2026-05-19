@@ -1,4 +1,5 @@
 # sm64coopdx MMORPG Vision
+*Current Project Version: Reference VERSION.md for the single source of truth.*
 
 ## The Ultimate Goal
 To create the definitive Multiplayer 3D Platforming experience, transforming Super Mario 64 into a living, breathing MMORPG world that honors the history of the genre.
