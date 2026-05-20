@@ -51,6 +51,12 @@ function GuildBank.save(guildName)
     mod_storage_save(GuildBank.get_save_key(guildName), data)
 end
 
+function GuildBank.save_all()
+    for guildName, _ in pairs(GuildBank.vaults) do
+        GuildBank.save(guildName)
+    end
+end
+
 function GuildBank.get_items(guildName)
     -- On the client, this returns the locally cached sync'd table
     -- On the host, this loads and returns the real data
@@ -125,13 +131,7 @@ end
 
 -- Packet Handlers
 function on_bank_packet(p)
-    if p.packetType == PACKET_BANK_SYNC then
-        -- Client receives updated bank state
-        local myGuild = gPlayerSyncTable[0].guildName
-        if myGuild and myGuild == p.guildName then
-            GuildBank.vaults[p.guildName] = p.items
-        end
-    elseif p.packetType == PACKET_BANK_ACTION and network_is_server() then
+    if p.packetType == PACKET_BANK_ACTION and network_is_server() then
         -- Server processes request
         local guildName = p.guildName
         local action = p.action
@@ -139,31 +139,37 @@ function on_bank_packet(p)
         local count = p.count
         local senderId = p.senderId
 
-        -- Simple transaction locking
-        if GuildBank.locks[guildName] then
-            djui_chat_message_create("Guild bank is currently busy. Try again.")
+        -- Validate request
+        if action ~= "request_sync" and (not count or count <= 0) then return end
+
+        local targetLocalIndex = network_local_index_from_global(senderId)
+        local senderTable = gPlayerSyncTable[targetLocalIndex]
+        if not senderTable or senderTable.guildName ~= guildName then
+            -- Cross-guild theft attempt
             return
         end
-        GuildBank.locks[guildName] = true
 
         GuildBank.load(guildName)
         local items = GuildBank.vaults[guildName]
 
-        if action == "deposit" then
+        if action == "request_sync" then
+            GuildBank.sync(guildName)
+
+        elseif action == "deposit" then
             -- Verify sender actually has the item via a dedicated packet or trust the client for now
             -- (In a true MMORPG, the server tracks all inventories authoritatively, but coopdx mod_storage inventory relies on local saves for clients)
             -- For now, the client removes the item before sending, but we have to accept that due to coopdx structure.
             -- A true secure way is that client sends request, server acks, client removes, server adds.
             -- To keep it aligned with `sm64coopdx` client-authoritative inventory, we just process it.
             items[itemId] = (items[itemId] or 0) + count
-            GuildBank.save(guildName)
+            if _G.SaveManager then SaveManager.request_save() else GuildBank.save(guildName) end
             GuildBank.sync(guildName)
 
         elseif action == "withdraw" then
             local current = items[itemId] or 0
             if current >= count then
                 items[itemId] = current - count
-                GuildBank.save(guildName)
+                if _G.SaveManager then SaveManager.request_save() else GuildBank.save(guildName) end
                 GuildBank.sync(guildName)
 
                 -- Tell the client it was successful so they can add to their inventory
@@ -180,8 +186,6 @@ function on_bank_packet(p)
                 network_send_to(targetLocalIndex, true, res)
             end
         end
-
-        GuildBank.locks[guildName] = false
     end
 end
 
@@ -226,12 +230,33 @@ end
 hook_chat_command("bank", "Open guild bank", on_bank_command)
 
 -- Sync on join
-function on_player_connected(m)
-    if network_is_server() then
-        local sTable = gPlayerSyncTable[m.playerIndex]
-        if sTable and sTable.guildName then
-            GuildBank.sync(sTable.guildName)
+-- Sync on join / Local loading
+function on_mario_update(m)
+    if m.playerIndex ~= 0 then return end
+
+    local sTable = gPlayerSyncTable[0]
+    if sTable.guildName and not GuildBank.clientSyncRequested then
+        -- We just learned our guild name, request bank data from host
+        GuildBank.clientSyncRequested = true
+        if not network_is_server() then
+            -- Send a dummy action or a dedicated sync request to fetch the state
+            -- For simplicity, since the server syncs every deposit/withdraw,
+            -- we could just ask the server to sync.
+            local packet = {
+                packetType = PACKET_BANK_ACTION,
+                action = "request_sync",
+                guildName = sTable.guildName,
+                senderId = network_global_index_from_local(0)
+            }
+            network_send(true, packet)
+        else
+            GuildBank.load(sTable.guildName)
         end
     end
+
+    if not sTable.guildName then
+        GuildBank.clientSyncRequested = false
+    end
 end
-hook_event(HOOK_ON_PLAYER_CONNECTED, on_player_connected)
+
+hook_event(HOOK_MARIO_UPDATE, on_mario_update)

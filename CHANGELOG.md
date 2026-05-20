@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.10 (Current)
+## v1.11 (Current)
+- **Save System Refactor**: Integrated remaining gameplay systems (Guild Bank, Achievements, Config, Quests) into the unified SaveManager to reduce disk I/O stutter.
+
+## v1.10
 - **New Feature: Guild Bank**: Shared storage for guild members via `/bank`.
 
 ## v1.9

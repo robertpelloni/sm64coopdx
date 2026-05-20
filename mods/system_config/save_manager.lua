@@ -39,6 +39,26 @@ local function execute_save()
         savedSystems = savedSystems + 1
     end
 
+    if _G.GuildBank and GuildBank.save_all then
+        GuildBank.save_all()
+        savedSystems = savedSystems + 1
+    end
+
+    if _G.Achievement and Achievement.save then
+        Achievement.save()
+        savedSystems = savedSystems + 1
+    end
+
+    if _G.Config and _G.save_config then
+        _G.save_config()
+        savedSystems = savedSystems + 1
+    end
+
+    if _G.Quest and Quest.save then
+        Quest.save()
+        savedSystems = savedSystems + 1
+    end
+
     SAVE_PENDING = false
     -- djui_chat_message_create("Autosave complete (" .. tostring(savedSystems) .. " systems).")
 end

@@ -14,8 +14,8 @@ function on_start_quest(msg)
     if msg == "coin" then
         Quest.start(m, "coin_collector")
     elseif msg == "save" then
-        Quest.save()
-        djui_chat_message_create("Quests Saved")
+        if _G.SaveManager then SaveManager.request_save() else Quest.save() end
+        djui_chat_message_create("Quests Save Requested")
     elseif msg == "load" then
         Quest.load()
         djui_chat_message_create("Quests Loaded")
@@ -39,7 +39,7 @@ function quest_check_coins(m)
 
     -- Save Interval
     if gGlobalTimer % 900 == 0 then
-        Quest.save()
+        if _G.SaveManager then SaveManager.request_save() else Quest.save() end
     end
 
     if m.numCoins > lastCoins then

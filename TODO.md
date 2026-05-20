@@ -10,7 +10,7 @@
 *   [x] **Guild Bank / Storage:** Extend the Guild system to allow shared item storage within the Guild Hall. Requires careful transaction locking to prevent duping.
 *   [x] **Auction House UI:** The Auction House currently relies on chat commands (`/ah sell`, `/ah buy`). It needs to be fully integrated into `UIToolkit`.
 *   [x] **Mail Attachment UI:** Sending items via mail is command-only. Need a UI menu to select inventory items as attachments.
-*   [ ] **Refactor Save System:** Consider batching `mod_storage_save` calls across different systems (Inventory, Mail, AH, Housing) into a single unified periodic save manager to reduce disk I/O.
+*   [x] **Refactor Save System:** Consider batching `mod_storage_save` calls across different systems (Inventory, Mail, AH, Housing) into a single unified periodic save manager to reduce disk I/O.
 
 ## Low Priority / Polish
 *   [ ] **Tooltip Formatting:** Add rich text color codes to the `UIToolkit` hover-tooltips (e.g., making the word "Rare" actually render in blue text).

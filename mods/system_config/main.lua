@@ -42,7 +42,7 @@ function on_config_command(msg)
         end
         djui_chat_message_create("Set " .. key .. " to " .. tostring(_G.Config.settings[key]))
         apply_config()
-        save_config()
+        if _G.SaveManager then SaveManager.request_save() else save_config() end
     else
         djui_chat_message_create("Unknown setting: " .. key)
     end

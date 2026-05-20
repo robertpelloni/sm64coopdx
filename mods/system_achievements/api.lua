@@ -26,7 +26,7 @@ function Achievement.unlock(m, id)
                 djui_chat_message_create("New Title Available: " .. def.title)
             end
         end
-        Achievement.save()
+        if _G.SaveManager then SaveManager.request_save() else Achievement.save() end
     end
 end
 
