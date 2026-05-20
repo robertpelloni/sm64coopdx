@@ -69,31 +69,9 @@ function mail_ui_render()
         UIToolkit.draw_menu(title, items, SELECTION, SCROLL_OFFSET, renderDetails, footer, "Read messages and claim attached items.")
 
     elseif UI_MODE == "compose_target" then
-        title = "MAILBOX - SELECT RECIPIENT"
-        footer = "A: Next Step  X: Inbox Mode  B: Close"
-
-        -- Build list of active players
-        for i = 0, MAX_PLAYERS - 1 do
-            if gNetworkPlayers[i].connected then
-                table.insert(items, {
-                    id = i,
-                    name = network_get_player_text_color_string(i) .. "Player " .. tostring(i),
-                    right_text = "",
-                    tooltip = "Send mail to this player."
-                })
-            end
-        end
-
-        local renderDetails = function(x, y, selItem)
-            djui_hud_set_color(0, 255, 255, 255)
-            djui_hud_print_text("Draft Message", x, y, 1.2)
-            djui_hud_set_color(200, 200, 200, 255)
-            UIToolkit.draw_wrapped_text("To: " .. selItem.name, x, y + 40, 25, 0.9)
-            djui_hud_set_color(150, 255, 150, 255)
-            djui_hud_print_text("Press A to confirm recipient.", x, y + 100, 0.8)
-        end
-
-        UIToolkit.draw_menu(title, items, SELECTION, SCROLL_OFFSET, renderDetails, footer, "Select an online player to send mail to.")
+        title = "MAILBOX - ENTER RECIPIENT NAME"
+        footer = "A: Confirm  B: Cancel  Y: Delete Char  D-Pad: Type"
+        UIToolkit.draw_text_input(title, composeTargetName, footer, "Type the exact name of the player you wish to mail.")
 
     elseif UI_MODE == "compose_attach" then
         title = "MAILBOX - COMPOSE (SELECT ATTACHMENT)"
@@ -159,18 +137,30 @@ function mail_ui_update(m)
     if UI_MODE == "inbox" then
         maxItems = #Mail.inbox > 0 and #Mail.inbox or 1
         list = Mail.inbox
-    elseif UI_MODE == "compose_target" then
-        for i = 0, MAX_PLAYERS - 1 do
-            if gNetworkPlayers[i].connected then
-                table.insert(list, {id=i, name=network_get_player_text_color_string(i) .. "Player " .. tostring(i)})
-            end
-        end
-        maxItems = #list > 0 and #list or 1
     elseif UI_MODE == "compose_attach" then
         local inv = _G.Inventory.get_all_items(m)
         maxItems = #inv + 1
         list = {{id="no_attachment"}}
         for _, item in ipairs(inv) do table.insert(list, item) end
+    end
+
+    if UI_MODE == "compose_target" then
+        local newText, submitted, cancelled, newTimer = UIToolkit.handle_text_input(m, composeTargetName, OPEN_TIMER)
+        composeTargetName = newText
+        OPEN_TIMER = newTimer
+
+        if submitted then
+            UI_MODE = "compose_attach"
+            SELECTION = 1
+            SCROLL_OFFSET = 0
+            OPEN_TIMER = 5
+        elseif cancelled then
+            UI_MODE = "inbox"
+            SELECTION = 1
+            SCROLL_OFFSET = 0
+            OPEN_TIMER = 5
+        end
+        return
     end
 
     local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
@@ -193,15 +183,6 @@ function mail_ui_update(m)
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
 
                 if SELECTION > #Mail.inbox then SELECTION = math.max(1, #Mail.inbox) end
-            end
-        elseif UI_MODE == "compose_target" and #list > 0 then
-            local target = list[SELECTION]
-            if target then
-                composeTargetName = target.name
-                play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-                UI_MODE = "compose_attach"
-                SELECTION = 1
-                SCROLL_OFFSET = 0
             end
         elseif UI_MODE == "compose_attach" then
             local item = list[SELECTION]

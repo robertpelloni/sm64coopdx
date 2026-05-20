@@ -114,12 +114,13 @@ function ah_ui_update(m)
 
     -- Dynamic Price Adjustment
     if UI_MODE == "sell" then
-        if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-            current_price = current_price + 10
-            play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-        elseif (m.controller.buttonPressed & L_JPAD) ~= 0 then
-            current_price = math.max(1, current_price - 10)
-            play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        -- Handle both pressed and held for fast scrolling
+        if (m.controller.buttonDown & R_JPAD) ~= 0 then
+            current_price = current_price + 1
+            if (m.controller.buttonPressed & R_JPAD) ~= 0 then play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject) end
+        elseif (m.controller.buttonDown & L_JPAD) ~= 0 then
+            current_price = math.max(1, current_price - 1)
+            if (m.controller.buttonPressed & L_JPAD) ~= 0 then play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject) end
         end
     end
 

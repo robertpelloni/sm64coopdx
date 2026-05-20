@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.11 (Current)
+## v1.12 (Current)
+- **UI Enhancements**: Added an on-screen D-Pad alphabetical spinner allowing custom text input for systems without a native keyboard. Mail now supports dynamic target inputs via D-pad, and Auction House supports fast price scrolling.
+
+## v1.11
 - **Save System Refactor**: Integrated remaining gameplay systems (Guild Bank, Achievements, Config, Quests) into the unified SaveManager to reduce disk I/O stutter.
 
 ## v1.10
