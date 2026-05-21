@@ -13,5 +13,5 @@
 *   [x] **Refactor Save System:** Consider batching `mod_storage_save` calls across different systems (Inventory, Mail, AH, Housing) into a single unified periodic save manager to reduce disk I/O.
 
 ## Low Priority / Polish
-*   [ ] **Tooltip Formatting:** Add rich text color codes to the `UIToolkit` hover-tooltips (e.g., making the word "Rare" actually render in blue text).
+*   [x] **Tooltip Formatting:** Add rich text color codes to the `UIToolkit` hover-tooltips (e.g., making the word "Rare" actually render in blue text).
 *   [ ] **Sound Pass:** Ensure every UI interaction (buy, sell, equip, error) has a consistent and satisfying audio cue.

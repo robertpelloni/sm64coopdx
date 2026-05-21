@@ -14,8 +14,15 @@ local MAX_VISIBLE_ROWS = 12
 function UIToolkit.draw_wrapped_text(text, x, y, maxLen, scale)
     if not text then return y end
 
+    -- Keyword Color Replacements
+    local formattedText = text
+    local modifiedText = string.gsub(formattedText, "Rare", "\\#0088FF\\Rare\\#FFFFFF\\")
+    modifiedText = string.gsub(modifiedText, "Common", "\\#AAAAAA\\Common\\#FFFFFF\\")
+    modifiedText = string.gsub(modifiedText, "Epic", "\\#8800FF\\Epic\\#FFFFFF\\")
+    modifiedText = string.gsub(modifiedText, "Legendary", "\\#FF8800\\Legendary\\#FFFFFF\\")
+
     local words = {}
-    for word in string.gmatch(text, "%S+") do table.insert(words, word) end
+    for word in string.gmatch(modifiedText, "%S+") do table.insert(words, word) end
 
     local currentX = x
     local currentY = y

@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define SM64COOPDX_VERSION "v1.12"
+#define SM64COOPDX_VERSION "v1.13"
 
 // internal version
 #define VERSION_TEXT "v"

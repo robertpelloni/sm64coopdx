@@ -135,7 +135,7 @@ function GuildBankUI.update(m)
             elseif UI_MODE == "deposit" then
                 if _G.Inventory and Inventory.remove_item(m, item.id, 1) then
                     if GuildBank.deposit(m, item.id, 1) then
-                        play_sound(SOUND_OBJ_STOMP_AARON, m.marioObj.header.gfx.cameraToObject)
+                        play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
                     else
                         -- Revert if deposit failed to send (e.g., no guild)
                         Inventory.add_item(m, item.id, 1)

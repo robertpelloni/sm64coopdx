@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.12 (Current)
+## v1.13 (Current)
+- **UI Tooltips**: Added automatic inline color coding for Item Rarity keywords (Common, Rare, Epic, Legendary).
+
+## v1.12
 - **UI Enhancements**: Added an on-screen D-Pad alphabetical spinner allowing custom text input for systems without a native keyboard. Mail now supports dynamic target inputs via D-pad, and Auction House supports fast price scrolling.
 
 ## v1.11
