@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.13 (Current)
+## v1.14 (Current)
+- **Visuals**: Updated weapon placeholders to use better thematic models (shells for blades, bobombs for blunts) while awaiting full custom 3D model support.
+
+## v1.13
 - **UI Tooltips**: Added automatic inline color coding for Item Rarity keywords (Common, Rare, Epic, Legendary).
 
 ## v1.12
