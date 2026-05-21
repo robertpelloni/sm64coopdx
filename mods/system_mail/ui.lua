@@ -202,7 +202,7 @@ function mail_ui_update(m)
 
                 Mail.send(network_get_player_text_color_string(m.playerIndex) .. "Player", composeTargetName, composeSubject, composeBody, att)
                 djui_chat_message_create("Mail sent to " .. composeTargetName)
-                play_sound(SOUND_OBJ_STOMP_AARON, m.marioObj.header.gfx.cameraToObject)
+                play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
                 UI_MODE = "inbox"
                 SELECTION = 1
                 SCROLL_OFFSET = 0

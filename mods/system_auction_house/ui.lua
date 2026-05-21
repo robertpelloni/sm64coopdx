@@ -179,7 +179,7 @@ function ah_ui_update(m)
                         price = current_price
                     })
                     if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
-                    play_sound(SOUND_OBJ_STOMP_AARON, m.marioObj.header.gfx.cameraToObject)
+                    play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
                     djui_chat_message_create("Listed 1x " .. item.id .. " for " .. tostring(current_price) .. "c")
                 else
                     play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)

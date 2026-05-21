@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.14 (Current)
+## v1.15 (Current)
+- **Sound Pass**: Audited UI sounds and replaced all hallucinated or jarring audio cues with consistent native menu clicking sounds.
+
+## v1.14
 - **Visuals**: Updated weapon placeholders to use better thematic models (shells for blades, bobombs for blunts) while awaiting full custom 3D model support.
 
 ## v1.13

@@ -14,4 +14,4 @@
 
 ## Low Priority / Polish
 *   [x] **Tooltip Formatting:** Add rich text color codes to the `UIToolkit` hover-tooltips (e.g., making the word "Rare" actually render in blue text).
-*   [ ] **Sound Pass:** Ensure every UI interaction (buy, sell, equip, error) has a consistent and satisfying audio cue.
+*   [x] **Sound Pass:** Ensure every UI interaction (buy, sell, equip, error) has a consistent and satisfying audio cue.
