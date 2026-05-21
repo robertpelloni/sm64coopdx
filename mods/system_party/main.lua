@@ -172,7 +172,11 @@ function on_party_command(msg)
         end
 
     else
-        djui_chat_message_create("Party Commands: create, invite, join, leave")
+        if _G.Party and Party.toggle_ui then
+            Party.toggle_ui()
+        else
+            djui_chat_message_create("Party Commands: create, invite, join, leave")
+        end
     end
     return true
 end

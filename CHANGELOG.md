@@ -1,6 +1,9 @@
 # Changelog
 
-## v1.15 (Current)
+## v1.16 (Current)
+- **Party UI**: Added a comprehensive visual menu for managing parties (create, join, invite, leave) directly tied into `UIToolkit`.
+
+## v1.15
 - **Sound Pass**: Audited UI sounds and replaced all hallucinated or jarring audio cues with consistent native menu clicking sounds.
 
 ## v1.14

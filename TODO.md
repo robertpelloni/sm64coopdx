@@ -2,6 +2,7 @@
 *Current Project Version: Reference VERSION.md for the single source of truth.*
 
 ## High Priority
+*   [x] **Party System UI:** Integrate the `/party` command functionality into a fully interactive visual menu using UIToolkit.
 *   [x] **Equipment UI Manager:** The `mechanic_weapons` and `system_perks` systems allow equipping items, but there is no dedicated "Character Sheet" UI to visually see what is currently equipped, unequip items, or view total stat bonuses from gear.
 *   [x] **Daily Quests:** Implement repeatable, randomly generated daily tasks (e.g., "Kill 10 Goombas", "Fish 5 Bass") in `system_quests` to provide ongoing end-game engagement.
 *   [x] **Weapon Visuals:** `mechanic_weapons` currently calculates hitboxes but lacks the visual rendering of the weapon model attached to Mario's hand (using `smlua_model_util_get_id`).
