@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.17
+- **Emotes System**: Added standard MMO character animations (Wave, Sit, Sleep, Dance) accessible via `/emote` or the Main Menu.
+- **Waypoints System**: Implemented fast travel to major regions of the game upon discovery, accessible from the Main Menu.
+- **Mega Mushroom**: Replicated the New Super Mario Bros feature, scaling Mario up 4x and allowing him to destroy enemies on contact.
+- **Main Menu**: Re-organized and expanded the main menu to support new features.
+
 ## v1.16 (Current)
 - **Party UI**: Added a comprehensive visual menu for managing parties (create, join, invite, leave) directly tied into `UIToolkit`.
 
