@@ -1,232 +1,116 @@
 -- name: System - Inventory UI
-<<<<<<< HEAD
--- description: Menu-driven UI for the Universal Inventory.
-=======
--- description: Menu-driven UI for the Universal Inventory using UIToolkit.
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
+-- description: Visual menu for managing the Universal Inventory.
+-- depends: system_ui, system_inventory
+
+_G.InventoryUI = {}
 
 local UI_VISIBLE = false
 local SELECTION = 1
 local SCROLL_OFFSET = 0
-<<<<<<< HEAD
-local VISIBLE_ITEMS = 8
-=======
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
 local OPEN_TIMER = 0
 
-function inventory_ui_render()
+function InventoryUI.render()
     if not UI_VISIBLE then return end
     if not _G.Inventory or not _G.UIToolkit then return end
 
     local m = gMarioStates[0]
-<<<<<<< HEAD
-    local items = Inventory.get_all_items(m) -- List of {id, count, name}
+    local itemsList = {}
 
-    local w = djui_hud_get_screen_width()
-    local h = djui_hud_get_screen_height()
-    local cx = w / 2
-    local cy = h / 2
-
-    -- Background
-    djui_hud_set_color(0, 0, 0, 220)
-    djui_hud_render_rect(cx - 200, cy - 150, 400, 300)
-
-    -- Header
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("INVENTORY", cx - 60, cy - 140, 1)
-
-    if #items == 0 then
-        djui_hud_print_text("Empty", cx - 30, cy, 1)
-
-        -- Close hint even if empty
-        djui_hud_set_color(200, 200, 200, 255)
-        djui_hud_print_text("B: Close", cx - 40, cy + 130, 1)
-        return
-    end
-
-    -- Scroll Logic
-    if SELECTION > #items then SELECTION = #items end
-    if SELECTION < 1 then SELECTION = 1 end
-
-    if SELECTION > SCROLL_OFFSET + VISIBLE_ITEMS then
-        SCROLL_OFFSET = SELECTION - VISIBLE_ITEMS
-    elseif SELECTION <= SCROLL_OFFSET then
-        SCROLL_OFFSET = SELECTION - 1
-    end
-
-    -- List Items (Left Side)
-    local listX = cx - 180
-    local listY = cy - 100
-
-    for i = 1, VISIBLE_ITEMS do
-        local idx = SCROLL_OFFSET + i
-        if idx <= #items then
-            local item = items[idx]
-            local displayName = item.name or item.id
-            local displayCount = "x" .. tostring(item.count)
-
-            if idx == SELECTION then
-                djui_hud_set_color(255, 255, 0, 255)
-                djui_hud_print_text("> " .. displayName, listX, listY + (i-1)*25, 1)
+    -- Build list from inventory data
+    for itemId, count in pairs(Inventory.data) do
+        if count > 0 then
+            local def = Inventory.items[itemId]
+            if def then
+                table.insert(itemsList, {
+                    id = itemId,
+                    name = def.name,
+                    right_text = "x" .. tostring(count),
+                    tooltip = def.description,
+                    def = def
+                })
             else
-                djui_hud_set_color(200, 200, 200, 255)
-                djui_hud_print_text("  " .. displayName, listX, listY + (i-1)*25, 1)
-            end
-
-            -- Count
-            djui_hud_print_text(displayCount, listX + 150, listY + (i-1)*25, 1)
-        end
-    end
-
-    -- Separator
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_render_rect(cx, cy - 110, 2, 220)
-
-    -- Details Pane (Right Side)
-    local selectedItem = items[SELECTION]
-    if selectedItem then
-        local def = _G.Inventory.items[selectedItem.id]
-        local desc = def.description or "No description."
-
-        local detX = cx + 20
-        local detY = cy - 100
-
-        djui_hud_set_color(0, 255, 255, 255)
-        djui_hud_print_text(selectedItem.name, detX, detY, 1)
-
-        djui_hud_set_color(200, 200, 200, 255)
-
-        -- Simple Text Wrapping
-        local words = {}
-        for word in string.gmatch(desc, "%S+") do table.insert(words, word) end
-
-        local line = ""
-        local lineY = detY + 40
-        local maxLen = 22 -- Approx chars per line
-
-        for _, word in ipairs(words) do
-            if string.len(line) + string.len(word) > maxLen then
-                djui_hud_print_text(line, detX, lineY, 0.8)
-                lineY = lineY + 20
-                line = word .. " "
-            else
-                line = line .. word .. " "
+                -- Fallback for unregistered items
+                table.insert(itemsList, {
+                    id = itemId,
+                    name = itemId,
+                    right_text = "x" .. tostring(count),
+                    tooltip = "Unknown Item",
+                    def = nil
+                })
             end
         end
-        if line ~= "" then
-             djui_hud_print_text(line, detX, lineY, 0.8)
-        end
-
-        -- Usage Hint
-        djui_hud_set_color(150, 150, 150, 255)
-        djui_hud_print_text("A: Equip/Use", detX, cy + 100, 0.8)
     end
 
-    -- Footer
-    djui_hud_set_color(200, 200, 200, 255)
-    djui_hud_print_text("B: Close", cx - 30, cy + 130, 1)
-=======
-    local raw_items = Inventory.get_all_items(m)
-
-    -- Format for UIToolkit
-    local items = {}
-    for _, item in ipairs(raw_items) do
-        local def = _G.Inventory.items[item.id]
-        table.insert(items, {
-            id = item.id,
-            name = item.name or item.id,
-            right_text = "x" .. tostring(item.count),
-            tooltip = def and (def.name .. " (Value: " .. tostring(def.value) .. ")") or "Unknown item."
-        })
-    end
+    -- Sort alphabetically
+    table.sort(itemsList, function(a, b) return a.name < b.name end)
 
     local renderDetails = function(x, y, selItem)
-        local def = _G.Inventory.items[selItem.id]
-        if def then
-            djui_hud_set_color(0, 255, 255, 255)
-            djui_hud_print_text(def.name, x, y, 1)
+        djui_hud_set_color(255, 255, 255, 255)
+        djui_hud_print_text(selItem.name, x, y, 1.2)
 
-            djui_hud_set_color(200, 200, 200, 255)
-            local desc = def.description or "No description."
-            UIToolkit.draw_wrapped_text(desc, x, y + 40, 22, 0.8)
-
-            -- Weapon Durability Display
-            if string.match(selItem.id, "^weap_") and gPlayerSyncTable[0].equipped_weapon == selItem.id then
-                local dur = gPlayerSyncTable[0].weapon_durability or 0
-                djui_hud_set_color(255, 100, 100, 255)
-                djui_hud_print_text("[EQUIPPED] Durability: " .. tostring(dur), x, y + 100, 0.8)
+        local rColor = "\\#FFFFFF\\"
+        if selItem.def and selItem.def.rarity then
+            if selItem.def.rarity == "Common" then rColor = "\\#AAAAAA\\"
+            elseif selItem.def.rarity == "Rare" then rColor = "\\#0088FF\\"
+            elseif selItem.def.rarity == "Epic" then rColor = "\\#8800FF\\"
+            elseif selItem.def.rarity == "Legendary" then rColor = "\\#FF8800\\"
             end
+            djui_hud_set_color(200, 200, 200, 255)
+            UIToolkit.draw_wrapped_text("Rarity: " .. rColor .. selItem.def.rarity .. "\\#FFFFFF\\", x, y + 25, 30, 0.8)
+        end
+
+        djui_hud_set_color(200, 200, 200, 255)
+        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 50, 25, 0.9)
+
+        if selItem.def and selItem.def.use then
+            djui_hud_set_color(100, 255, 100, 255)
+            djui_hud_print_text("Press A to Use", x, y + 120, 0.8)
         end
     end
 
-    UIToolkit.draw_menu("INVENTORY", items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Equip/Use  B: Close", "Your universal inventory storing all items, equipment, and crafting materials.")
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
+    UIToolkit.draw_menu("INVENTORY", itemsList, SELECTION, SCROLL_OFFSET, renderDetails, "A: Use/Equip  B: Close", "Manage all your collected items and resources.")
 end
 
-function inventory_ui_update(m)
+function InventoryUI.update(m)
     if m.playerIndex ~= 0 then return end
-<<<<<<< HEAD
-
     if not UI_VISIBLE then return end
+    if not _G.UIToolkit then return end
 
-    -- Lock Mario
-    if m.action ~= ACT_WAITING_FOR_DIALOG then
-        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+    local itemsList = {}
+    for itemId, count in pairs(Inventory.data) do
+        if count > 0 then table.insert(itemsList, itemId) end
     end
+    table.sort(itemsList)
+    local maxItems = #itemsList
 
-    -- Debounce
-    if OPEN_TIMER > 0 then
-        OPEN_TIMER = OPEN_TIMER - 1
-        return
-    end
-
-    -- Navigation
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        SELECTION = SELECTION + 1
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        SELECTION = SELECTION - 1
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-
-    -- Close
-    if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-        UI_VISIBLE = false
-        set_mario_action(m, ACT_IDLE, 0)
-        return
-    end
-
-    -- Use
-    if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
-       play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-       -- Future: Trigger item usage
-=======
-    if not UI_VISIBLE then return end
-    if not _G.Inventory or not _G.UIToolkit then return end
-
-    local raw_items = Inventory.get_all_items(m)
-
-    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #raw_items, OPEN_TIMER)
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
-    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #raw_items)
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, maxItems)
 
-    if act then
-       play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-       local selItem = raw_items[SELECTION]
-       if selItem then
-           if string.match(selItem.id, "^weap_") then
-               if _G.Weapons then
-                   Weapons.equip(m, selItem.id)
-               end
-           end
-       end
+    if act and maxItems > 0 then
+        local selId = itemsList[SELECTION]
+        local def = Inventory.items[selId]
+        if def and def.use then
+            local success = def.use(m)
+            if success then
+                Inventory.remove_item(m, selId, 1)
+                play_sound(SOUND_GENERAL_COIN, m.marioObj.header.gfx.cameraToObject)
+                -- If we used the last one, adjust selection
+                if Inventory.data[selId] == nil or Inventory.data[selId] <= 0 then
+                    if SELECTION > maxItems - 1 then SELECTION = math.max(1, maxItems - 1) end
+                end
+            else
+                play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+            end
+        else
+            play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+            djui_chat_message_create("This item cannot be used directly.")
+        end
     end
 
     if close then
         UI_VISIBLE = false
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
 end
 
@@ -235,17 +119,9 @@ function Inventory.toggle_ui()
     if UI_VISIBLE then
         SELECTION = 1
         SCROLL_OFFSET = 0
-<<<<<<< HEAD
-        OPEN_TIMER = 5 -- 5 frames debounce
-=======
         OPEN_TIMER = 5
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
 end
 
-function Inventory.close_ui()
-    UI_VISIBLE = false
-end
-
-hook_event(HOOK_ON_HUD_RENDER, inventory_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, inventory_ui_update)
+hook_event(HOOK_ON_HUD_RENDER, InventoryUI.render)
+hook_event(HOOK_BEFORE_MARIO_UPDATE, InventoryUI.update)
