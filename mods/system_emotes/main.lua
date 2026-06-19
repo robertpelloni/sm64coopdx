@@ -73,6 +73,12 @@ function EmotesUI.update(m)
     OPEN_TIMER = timer
     SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #menu_items)
 
+    -- Handle immediate closure if player moves significantly while menu is open
+    if m.forwardVel > 5 or m.action == ACT_JUMP then
+         UI_VISIBLE = false
+         return
+    end
+
     if act then
         play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         local item = menu_items[SELECTION]
