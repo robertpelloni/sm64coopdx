@@ -11,17 +11,24 @@ function quests_ui_render()
     if not _G.Quest or not _G.UIToolkit then return end
 
     local m = gMarioStates[0]
-    local active_quests = Quest.get_active_quests(m)
+    local active_quests = Quest.get_active(m)
 
     local items = {}
-    for _, qId in ipairs(active_quests) do
-        local def = _G.Quest.registry[qId]
+    for _, q in ipairs(active_quests) do
+        local def = q.def
         if def then
-            local p = Quest.get_progress(m, qId)
-            local status = (p >= def.goal) and "Complete" or tostring(p) .. "/" .. tostring(def.goal)
+            local p = q.progress
+            local status = (p >= def.target) and "Complete" or tostring(p) .. "/" .. tostring(def.target)
+            local name = def.name
+
+            -- Color-code Daily Quests
+            if string.sub(q.id, 1, 6) == "daily_" then
+                name = "\\#ffff00\\" .. name .. "\\#ffffff\\"
+            end
+
             table.insert(items, {
-                id = qId,
-                name = def.name,
+                id = q.id,
+                name = name,
                 right_text = status,
                 tooltip = "Objective: " .. def.description
             })
@@ -33,17 +40,32 @@ function quests_ui_render()
     end
 
     local renderDetails = function(x, y, selItem)
-        local def = _G.Quest.registry[selItem.id]
-        if def then
+        local active_quest = nil
+        for _, q in ipairs(active_quests) do
+            if q.id == selItem.id then
+                active_quest = q
+                break
+            end
+        end
+
+        if active_quest and active_quest.def then
+            local def = active_quest.def
             djui_hud_set_color(0, 255, 255, 255)
             djui_hud_print_text(def.name, x, y, 1)
 
             djui_hud_set_color(200, 200, 200, 255)
             UIToolkit.draw_wrapped_text(def.description, x, y + 40, 22, 0.8)
 
-            local p = Quest.get_progress(m, selItem.id)
+            local p = active_quest.progress
             djui_hud_set_color(150, 255, 150, 255)
-            djui_hud_print_text("Progress: " .. tostring(p) .. " / " .. tostring(def.goal), x, y + 100, 0.8)
+            djui_hud_print_text("Progress: " .. tostring(p) .. " / " .. tostring(def.target), x, y + 100, 0.8)
+
+            -- Rewards
+            local rewY = y + 130
+            if def.reward then
+                 djui_hud_set_color(0, 255, 0, 255)
+                 djui_hud_print_text("Reward: " .. tostring(def.reward.amount) .. "x " .. (def.reward.item or "Coins"), x, rewY, 0.8)
+            end
         else
             djui_hud_set_color(200, 200, 200, 255)
             djui_hud_print_text("Explore the world to find quests.", x, y, 0.8)
@@ -58,7 +80,7 @@ function quests_ui_update(m)
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
-    local active_quests = _G.Quest.get_active_quests(m)
+    local active_quests = _G.Quest.get_active(m)
     local maxItems = #active_quests > 0 and #active_quests or 1
 
     local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
