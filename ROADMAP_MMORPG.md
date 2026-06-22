@@ -19,7 +19,6 @@ The ultimate goal of `sm64coopdx` is to evolve into a massive multiplayer online
 | **Ratchet & Clank** | **Weapon Wheel & Upgrades.** | **Complete** (`mods/system_weapon_wheel`, `mods/mechanic_weapons`). |
 | **Psychonauts** | **PSI Powers:** Telekinesis. | **Complete** (`mods/mechanic_telekinesis`). |
 | **Super Mario Galaxy** | **Gravity:** Launch Stars. | **Complete** (`mods/mechanic_gravity`). |
-| **New Super Mario Bros** | **Mega Mushroom:** Giant Mario, break blocks. | **Complete** (`mods/mechanic_mega_mushroom`). |
 | **Sonic Generations** | **Boost:** Instant high-speed state. | **Complete** (`mods/mechanic_boost`). |
 | **Super Mario Odyssey** | **Possession:** Controlling enemies. | **Complete** (`mods/mechanic_possession`). |
 | **A Hat in Time** | **Badges & Hookshot.** | **Complete** (`mods/system_perks`, `mods/mechanic_hookshot`). |

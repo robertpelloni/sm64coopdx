@@ -23,7 +23,7 @@ function Waypoints.load()
             Waypoints.unlocked[entry] = true
         end
     end
-    -- Always unlock Castle Grounds silently upon load
+    -- Always unlock Castle Grounds
     Waypoints.unlocked["castle_grounds"] = true
 end
 
@@ -53,9 +53,6 @@ end
 -- Check unlocking when entering a level
 function waypoints_level_init()
     local levelNum = gNetworkPlayers[0].currLevelNum
-    -- Skip checking Castle Grounds since it's already unlocked silently on load, preventing spam
-    if levelNum == LEVEL_CASTLE_GROUNDS then return end
-
     for _, wp in ipairs(WAYPOINT_DEFS) do
         if wp.level == levelNum then
             Waypoints.unlock(wp.id)

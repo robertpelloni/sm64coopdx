@@ -9,19 +9,18 @@ local OPEN_TIMER = 0
 
 -- Define Main Menu Layout
 local menu_items = {
-    { id = "auction_house", name = "Auction House",  action = function() if _G.AuctionHouse then _G.AuctionHouse.toggle_ui() end end, tooltip = "Global asynchronous marketplace." },
-    { id = "equipment", name = "Equipment",  action = function() if _G.Equipment then _G.Equipment.toggle_ui() end end, tooltip = "Manage your equipped weapons and badges." },
-    { id = "inventory", name = "Inventory",  action = function() if _G.Inventory then _G.Inventory.toggle_ui() end end, tooltip = "View and manage your items." },
-    { id = "quests",    name = "Quest Log",  action = function() if _G.Quest then _G.Quest.toggle_ui() end end, tooltip = "Check your ongoing missions." },
-    { id = "classes",   name = "Classes",    action = function() if _G.Classes then _G.Classes.toggle_ui() end end, tooltip = "Manage your class and abilities." },
-    { id = "guilds",    name = "Guilds",     action = function() if _G.Guilds then _G.Guilds.toggle_ui() end end, tooltip = "Socialize with your guild." },
-    { id = "party",     name = "Party",      action = function() if _G.Party then _G.Party.toggle_ui() end end, tooltip = "Manage your current party." },
-    { id = "stats",     name = "Stats",      action = function() if _G.Progression then _G.Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
-    { id = "achievements", name = "Achievements", action = function() if _G.Achievements then _G.Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
-    { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then _G.Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
-    { id = "emotes",    name = "Emotes",     action = function() if _G.EmotesUI then _G.EmotesUI.toggle() end end, tooltip = "Express yourself with animations." },
-    { id = "waypoints", name = "Waypoints",  action = function() if _G.WaypointsUI then _G.WaypointsUI.toggle() end end, tooltip = "Fast travel to unlocked locations." },
-    { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then _G.SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." }
+    { id = "auction_house", name = "Auction House",  action = function() if _G.AuctionHouse then AuctionHouse.toggle_ui() end end, tooltip = "Global asynchronous marketplace." },
+    { id = "equipment", name = "Equipment",  action = function() if _G.Equipment then Equipment.toggle_ui() end end, tooltip = "Manage your equipped weapons and badges." },
+    { id = "inventory", name = "Inventory",  action = function() if _G.Inventory then Inventory.toggle_ui() end end, tooltip = "View and manage your items." },
+    { id = "quests",    name = "Quest Log",  action = function() if _G.Quest then Quest.toggle_ui() end end, tooltip = "Check your ongoing missions." },
+    { id = "classes",   name = "Classes",    action = function() if _G.Classes then Classes.toggle_ui() end end, tooltip = "Manage your class and abilities." },
+    { id = "guilds",    name = "Guilds",     action = function() if _G.Guilds then Guilds.toggle_ui() end end, tooltip = "Socialize with your guild." },
+    { id = "party",     name = "Party",      action = function() if _G.Party then Party.toggle_ui() end end, tooltip = "Manage your current party." },
+    { id = "stats",     name = "Stats",      action = function() if _G.Progression then Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
+    { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
+    { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
+    { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." },
+    { id = "waypoints", name = "Waypoints",  action = function() if _G.WaypointsUI then WaypointsUI.toggle() end end, tooltip = "Fast travel to unlocked locations." },
 }
 
 function main_menu_render()
@@ -48,6 +47,7 @@ function main_menu_update(m)
             SELECTION = 1
             SCROLL_OFFSET = 0
             OPEN_TIMER = 5
+            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
         else
             set_mario_action(m, ACT_IDLE, 0)
         end
@@ -56,6 +56,10 @@ function main_menu_update(m)
 
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
+
+    if m.action ~= ACT_WAITING_FOR_DIALOG then
+        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+    end
 
     local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #menu_items, OPEN_TIMER)
     SELECTION = sel
@@ -74,6 +78,7 @@ function main_menu_update(m)
 
     if close then
         UI_VISIBLE = false
+        set_mario_action(m, ACT_IDLE, 0)
     end
 end
 
