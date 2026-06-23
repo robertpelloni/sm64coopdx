@@ -1,6 +1,5 @@
 -- name: System - Equipment UI
--- description: Manager for equipped weapons and badges.
--- depends: system_ui, system_inventory
+-- description: UI to manage active weapons and badges.
 
 _G.Equipment = {}
 
@@ -14,38 +13,35 @@ function equipment_ui_render()
     if not _G.UIToolkit then return end
 
     local m = gMarioStates[0]
+    local sync = gPlayerSyncTable[0]
     local items = {}
 
-    -- Slot: Weapon
-    local eqWeap = gPlayerSyncTable[0].equipped_weapon
-    if eqWeap and _G.Inventory and _G.Inventory.items[eqWeap] then
-        local def = _G.Inventory.items[eqWeap]
-        local dur = gPlayerSyncTable[0].weapon_durability or 0
+    -- 1. Weapon Slot
+    local wId = sync.equipped_weapon
+    if wId and _G.Weapons and Weapons.registry[wId] then
+        local def = Weapons.registry[wId]
         table.insert(items, {
             slot = "Weapon",
-            id = eqWeap,
+            id = wId,
             name = "[Weapon] " .. def.name,
-            right_text = "Dur: " .. tostring(dur),
-            tooltip = def.description,
-            def = def
+            right_text = "Dur: " .. tostring(sync.weapon_durability or 0) .. "/" .. tostring(def.maxDurability),
+            tooltip = "Damage: " .. tostring(def.damage) .. ". " .. def.type .. " type."
         })
     else
         table.insert(items, { slot = "Weapon", id = "none", name = "[Weapon] Empty", right_text = "", tooltip = "No weapon equipped." })
     end
 
-    -- Slot: Badges (Assuming up to 3 slots for system_perks)
+    -- 2. Badge Slots (1 to 3)
     for i = 1, 3 do
-        local badgeId = gPlayerSyncTable[0]["eq_badge_" .. i]
-        if badgeId and _G.Inventory and _G.Inventory.items[badgeId] then
-            local def = _G.Inventory.items[badgeId]
+        local bId = sync["eq_badge_" .. i]
+        if bId and _G.Inventory and _G.Inventory.items[bId] then
+            local def = _G.Inventory.items[bId]
             table.insert(items, {
                 slot = "Badge " .. i,
-                id = badgeId,
+                id = bId,
                 name = "[Badge " .. i .. "] " .. def.name,
-                right_text = "Active",
-                tooltip = def.description,
-                def = def,
-                badgeSlot = i
+                right_text = "",
+                tooltip = def.description or "A mystical badge."
             })
         else
             table.insert(items, { slot = "Badge " .. i, id = "none", name = "[Badge " .. i .. "] Empty", right_text = "", tooltip = "No badge equipped in this slot." })
@@ -85,6 +81,7 @@ function equipment_ui_update(m)
             if gPlayerSyncTable[0].equipped_weapon then
                 djui_chat_message_create("Unequipped " .. gPlayerSyncTable[0].equipped_weapon)
                 gPlayerSyncTable[0].equipped_weapon = nil
+                gPlayerSyncTable[0].weapon_durability = 0
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
             end
         elseif SELECTION >= 2 and SELECTION <= 4 then
@@ -94,11 +91,6 @@ function equipment_ui_update(m)
                 djui_chat_message_create("Unequipped " .. badgeId)
                 gPlayerSyncTable[0]["eq_badge_" .. badgeIdx] = nil
                 play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-
-                -- Force perk update if system_perks exists
-                if _G.Perks and Perks.apply_badges then
-                     -- Delay apply to next frame usually, but we can call it if exposed
-                end
             end
         end
     end
