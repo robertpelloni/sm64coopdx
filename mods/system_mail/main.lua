@@ -49,6 +49,16 @@ end
 local PACKET_MAIL_SEND = 50
 
 function on_mail_receive(data)
+    -- Validate incoming attachment count to prevent negative integer attacks from malicious clients
+    if data.attachment and data.attachment.count then
+        local count = math.floor(tonumber(data.attachment.count) or 0)
+        if count <= 0 then
+            data.attachment = nil -- Strip invalid attachment
+        else
+            data.attachment.count = count
+        end
+    end
+
     -- We received a mail packet from another player (or server)
     table.insert(Mail.inbox, {
         sender = data.sender,
@@ -62,6 +72,16 @@ function on_mail_receive(data)
 end
 
 function Mail.send(senderName, targetPlayerName, subject, body, attachment)
+    -- Pre-flight validation on the sender side
+    if attachment and attachment.count then
+        local count = math.floor(tonumber(attachment.count) or 0)
+        if count <= 0 then
+            djui_chat_message_create("Invalid attachment count.")
+            return
+        end
+        attachment.count = count
+    end
+
     -- Find the target player index
     local targetIndex = -1
     for i = 0, MAX_PLAYERS - 1 do
