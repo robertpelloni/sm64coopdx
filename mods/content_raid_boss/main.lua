@@ -20,6 +20,7 @@ local HITBOX_KING_WHOMP = {
 -- oHealth: HP
 -- oAction: Phase (0=Idle, 1=Stomp, 2=Minions, 3=Flying)
 -- oTimer: Attack timer
+-- oInstanceID: The instance this boss belongs to
 
 function bhv_king_whomp_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
@@ -30,6 +31,9 @@ function bhv_king_whomp_init(o)
     o.oBuoyancy = 1.0
     o.oOpacity = 255
 
+    -- Default to instance 0 (Global) or the spawner's instance
+    o.oInstanceID = gPlayerSyncTable[0].instanceID or 0
+
     -- Resize
     cur_obj_scale(4.0)
     obj_set_hitbox(o, HITBOX_KING_WHOMP)
@@ -38,11 +42,21 @@ function bhv_king_whomp_init(o)
     network_init_object(o, true, {
         "oHealth",
         "oAction",
-        "oTimer"
+        "oTimer",
+        "oInstanceID"
     })
 end
 
 function bhv_king_whomp_loop(o)
+    -- INSTANCING: Only render and step if in the same instance
+    local localInst = gPlayerSyncTable[0].instanceID or 0
+    if o.oInstanceID ~= localInst then
+        o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+        return -- Do not process interactions or render
+    else
+        o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
+    end
+
     object_step(o)
 
     -- Hitbox Maintenance
@@ -52,7 +66,24 @@ function bhv_king_whomp_loop(o)
     if o.oHealth <= 0 then
         obj_mark_for_deletion(o)
         spawn_mist_particles_variable(0, 0, 100.0)
-        djui_chat_message_create("King Whomp Defeated!")
+        djui_chat_message_create("King Whomp Defeated in Instance " .. tostring(o.oInstanceID) .. "!")
+
+        -- Distribute Loot to nearby players in the same instance
+        for i = 0, MAX_PLAYERS - 1 do
+            if gNetworkPlayers[i].connected then
+                local remoteInst = gPlayerSyncTable[i].instanceID or 0
+                if remoteInst == o.oInstanceID then
+                    local remoteM = gMarioStates[i]
+                    if dist_between_objects(o, remoteM.marioObj) < 2000 then
+                        if i == 0 and _G.Inventory then
+                            -- Only distribute locally to avoid duplicate network calls
+                            Inventory.add_item(gMarioStates[0], "coin_bag", 500)
+                            djui_chat_message_create("Looted 500 Coins!")
+                        end
+                    end
+                end
+            end
+        end
         return
     end
 
@@ -64,13 +95,11 @@ function bhv_king_whomp_loop(o)
 
         if attacked or interacted then
             -- Take Damage
-            -- Standard Mario punch is ~20-50 damage in some mods, but let's assume 50 per hit.
             local dmg = 50
             o.oHealth = o.oHealth - dmg
 
             -- Visual Feedback
             o.oInteractStatus = 0 -- Reset
-            -- Spawn red coins or sparkles?
             spawn_triangle_break_particles(10, 138, 3.0, 4)
         end
     end
@@ -91,8 +120,23 @@ function bhv_king_whomp_loop(o)
             o.oTimer = 0
         end
     elseif o.oAction == 1 then -- Phase 1: Stomp
-        -- Chase nearest player
-        local target = nearest_player_to_object(o)
+        -- Chase nearest player (in the same instance)
+        local target = nil
+        local minDist = 999999
+        for i = 0, MAX_PLAYERS - 1 do
+            if gNetworkPlayers[i].connected then
+                local remoteInst = gPlayerSyncTable[i].instanceID or 0
+                if remoteInst == o.oInstanceID then
+                    local remoteM = gMarioStates[i]
+                    local dist = dist_between_objects(o, remoteM.marioObj)
+                    if dist < minDist then
+                        minDist = dist
+                        target = remoteM.marioObj
+                    end
+                end
+            end
+        end
+
         if target then
             local angle = obj_angle_to_object(o, target)
             o.oMoveAngleYaw = approach_s16_symmetric(o.oMoveAngleYaw, angle, 0x200)
@@ -102,7 +146,6 @@ function bhv_king_whomp_loop(o)
             if o.oTimer > 90 then
                 o.oVelY = 40.0
                 o.oForwardVel = 0
-                -- Fall logic handles slam impact
                 o.oTimer = 0
             end
         end
@@ -111,7 +154,7 @@ function bhv_king_whomp_loop(o)
         o.oForwardVel = 0
         if o.oTimer % 100 == 0 then
             -- Spawn Minion Stub
-            djui_chat_message_create("King Whomp summons minions!")
+            -- In a full implementation, minion instances would also match o.oInstanceID
         end
         if o.oTimer > 600 then o.oAction = 0 end -- Reset
 
@@ -126,13 +169,16 @@ local id_bhvKingWhomp = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_king_who
 -- Spawn
 function on_spawn_raid(msg)
     local m = gMarioStates[0]
-    spawn_sync_object(
+    local obj = spawn_sync_object(
         id_bhvKingWhomp,
         E_MODEL_KING_WHOMP,
         m.pos.x + 500, m.pos.y + 500, m.pos.z,
         nil
     )
-    djui_chat_message_create("Raid Boss Spawned: King Whomp!")
+    if obj then
+        obj.oInstanceID = gPlayerSyncTable[0].instanceID or 0
+    end
+    djui_chat_message_create("Raid Boss Spawned in Instance " .. tostring(gPlayerSyncTable[0].instanceID or 0) .. "!")
     return true
 end
 
@@ -140,9 +186,10 @@ hook_chat_command("raid", "Spawn Raid Boss", on_spawn_raid)
 
 -- HUD Render
 function boss_hud()
+    local localInst = gPlayerSyncTable[0].instanceID or 0
     local obj = obj_get_first(OBJ_LIST_GENACTOR)
     while obj do
-        if obj.behavior == id_bhvKingWhomp then
+        if obj.behavior == id_bhvKingWhomp and obj.oInstanceID == localInst then
             -- Draw HP Bar
             local w = djui_hud_get_screen_width()
             local h = 20
