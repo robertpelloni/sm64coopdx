@@ -1,121 +1,90 @@
 -- name: System - Classes UI
--- description: UI for Class Selection and Talents using UIToolkit.
+-- description: UI for selecting classes and viewing abilities/talents.
+-- depends: system_ui, system_classes
+
+_G.ClassesUI = {}
+_G.Classes = _G.Classes or {}
 
 local UI_VISIBLE = false
 local SELECTION = 1
 local SCROLL_OFFSET = 0
 local OPEN_TIMER = 0
 
-function classes_ui_render()
+function ClassesUI.render()
     if not UI_VISIBLE then return end
-    if not _G.Classes or not _G.UIToolkit then return end
+    if not _G.UIToolkit or not _G.Classes then return end
 
     local m = gMarioStates[0]
-    local sTable = gPlayerSyncTable[m.playerIndex]
-    local currentClass = sTable.classType or 0
+    local sTable = gPlayerSyncTable[0]
+    local currentClass = sTable.classType or Classes.TYPE_NONE
 
-    local classList = {}
-    for id, def in pairs(_G.Classes.defs) do
-        table.insert(classList, {
-            id=id,
-            def=def,
-            name=def.name,
-            right_text = (id == currentClass and "Active" or "")
-        })
-    end
-    table.sort(classList, function(a,b) return a.id < b.id end)
+    local items = {}
+
+    table.insert(items, { id = Classes.TYPE_WARRIOR, name = "Warrior", right_text = (currentClass == Classes.TYPE_WARRIOR and "Active" or ""), tooltip = Classes.defs[Classes.TYPE_WARRIOR] and Classes.defs[Classes.TYPE_WARRIOR].desc or "" })
+    table.insert(items, { id = Classes.TYPE_MAGE, name = "Mage", right_text = (currentClass == Classes.TYPE_MAGE and "Active" or ""), tooltip = Classes.defs[Classes.TYPE_MAGE] and Classes.defs[Classes.TYPE_MAGE].desc or "" })
+    table.insert(items, { id = Classes.TYPE_ROGUE, name = "Rogue", right_text = (currentClass == Classes.TYPE_ROGUE and "Active" or ""), tooltip = Classes.defs[Classes.TYPE_ROGUE] and Classes.defs[Classes.TYPE_ROGUE].desc or "" })
 
     local renderDetails = function(x, y, selItem)
-        local def = selItem.def
+        local def = Classes.defs[selItem.id]
+        if not def then return end
 
         djui_hud_set_color(0, 255, 255, 255)
-        djui_hud_print_text(def.name, x, y, 1)
+        djui_hud_print_text(def.name, x, y, 1.2)
 
-        -- Description
         djui_hud_set_color(200, 200, 200, 255)
-        local currY = UIToolkit.draw_wrapped_text(def.desc or "", x, y + 30, 22, 0.8)
+        UIToolkit.draw_wrapped_text(def.desc, x, y + 40, 25, 0.9)
 
-        -- Abilities
-        djui_hud_set_color(255, 215, 0, 255)
-        djui_hud_print_text("Abilities:", x, currY, 1)
-        djui_hud_set_color(200, 200, 255, 255)
-        djui_hud_print_text("1: " .. (def.ability_1 or "None"), x, currY + 20, 0.8)
-        djui_hud_print_text("2: " .. (def.ability_2 or "None"), x, currY + 35, 0.8)
+        djui_hud_set_color(255, 255, 0, 255)
+        djui_hud_print_text("Ability L: " .. (def.ability_1 or "None"), x, y + 100, 0.8)
+        djui_hud_print_text("Ability R: " .. (def.ability_2 or "None"), x, y + 120, 0.8)
 
-        -- Talents
-        currY = currY + 60
-        djui_hud_set_color(255, 215, 0, 255)
-        djui_hud_print_text("Talents (X to Unlock):", x, currY, 1)
-        currY = currY + 20
-
-        for _, t in ipairs(def.talents) do
-            local unlocked = Classes.has_talent(m, t.id)
-            if unlocked then
-                djui_hud_set_color(0, 255, 0, 255)
-                djui_hud_print_text("[X] " .. t.name, x, currY, 0.8)
-            else
-                djui_hud_set_color(150, 150, 150, 255)
-                djui_hud_print_text("[ ] " .. t.name, x, currY, 0.8)
-            end
-            currY = currY + 15
-        end
-
-        -- Bonuses
-        currY = currY + 10
-        djui_hud_set_color(0, 255, 0, 255)
-        if def.hp_bonus ~= 0 then
-            djui_hud_print_text("HP: " .. (def.hp_bonus > 0 and "+" or "") .. def.hp_bonus, x, currY, 0.8)
-            currY = currY + 15
-        end
-        if def.speed_mult ~= 1.0 then
-            djui_hud_print_text("Speed: x" .. def.speed_mult, x, currY, 0.8)
+        if currentClass ~= selItem.id then
+            djui_hud_set_color(150, 255, 150, 255)
+            djui_hud_print_text("Press A to select this class.", x, y + 160, 0.8)
         end
     end
 
-    UIToolkit.draw_menu("CLASSES & TALENTS", classList, SELECTION, SCROLL_OFFSET, renderDetails, "A: Equip Class  X: Unlock Talent  B: Close")
+    UIToolkit.draw_menu("CLASS SELECT", items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select Class  B: Close", "Choose your path and master unique abilities.")
 end
 
-function classes_ui_update(m)
+function ClassesUI.update(m)
     if m.playerIndex ~= 0 then return end
     if not UI_VISIBLE then return end
-    if not _G.Classes or not _G.UIToolkit then return end
+    if not _G.UIToolkit then return end
 
-    local classList = {}
-    for id, def in pairs(_G.Classes.defs) do
-        table.insert(classList, {id=id, def=def})
-    end
-    table.sort(classList, function(a,b) return a.id < b.id end)
-
-    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #classList, OPEN_TIMER)
+    local maxItems = 3
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
-    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #classList)
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, maxItems)
 
     if act then
-        local selItem = classList[SELECTION]
-        if selItem then
-            Classes.set_class(m, selItem.id)
-            play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        local targetType = nil
+        if SELECTION == 1 then targetType = Classes.TYPE_WARRIOR
+        elseif SELECTION == 2 then targetType = Classes.TYPE_MAGE
+        elseif SELECTION == 3 then targetType = Classes.TYPE_ROGUE
         end
-    end
 
-    -- X to unlock talent (Prototype logic: unlock first locked talent for now)
-    if (m.controller.buttonPressed & X_BUTTON) ~= 0 and OPEN_TIMER <= 0 then
-        local selItem = classList[SELECTION]
-        if selItem then
-            local unlockedSomething = false
-            for _, t in ipairs(selItem.def.talents) do
-                if not Classes.has_talent(m, t.id) then
-                    Classes.unlock_talent(m, t.id)
-                    djui_chat_message_create("Unlocked Talent: " .. t.name)
-                    play_sound(SOUND_MENU_STAR_SOUND, m.marioObj.header.gfx.cameraToObject)
-                    unlockedSomething = true
-                    break
+        if targetType and gPlayerSyncTable[0].classType ~= targetType then
+            Classes.set_class(m, targetType)
+
+            -- Initial inventory management based on class selection
+            if _G.Inventory and not gPlayerSyncTable[0].class_items_granted then
+                if targetType == Classes.TYPE_WARRIOR then
+                    Inventory.add_item(m, "weap_hammer", 1)
+                elseif targetType == Classes.TYPE_MAGE then
+                    Inventory.add_item(m, "potion_mana", 5)
+                elseif targetType == Classes.TYPE_ROGUE then
+                    Inventory.add_item(m, "weap_sword", 1)
                 end
+                gPlayerSyncTable[0].class_items_granted = true
             end
-            if not unlockedSomething then
-                play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
-            end
+
+            play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
+            UI_VISIBLE = false
+            set_mario_action(m, ACT_IDLE, 0)
+        else
+            play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
         end
     end
 
@@ -133,9 +102,5 @@ function Classes.toggle_ui()
     end
 end
 
-function Classes.close_ui()
-    UI_VISIBLE = false
-end
-
-hook_event(HOOK_ON_HUD_RENDER, classes_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, classes_ui_update)
+hook_event(HOOK_ON_HUD_RENDER, ClassesUI.render)
+hook_event(HOOK_BEFORE_MARIO_UPDATE, ClassesUI.update)

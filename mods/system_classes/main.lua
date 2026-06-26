@@ -239,3 +239,15 @@ function classes_hud()
 end
 
 hook_event(HOOK_ON_HUD_RENDER, classes_hud)
+
+-- Hook UI to command
+function on_class_command(msg)
+    if _G.ClassesUI and _G.Classes.toggle_ui then
+        _G.Classes.toggle_ui()
+    else
+        djui_chat_message_create("Class UI not available.")
+    end
+    return true
+end
+
+hook_chat_command("class", "Open class selection menu", on_class_command)
