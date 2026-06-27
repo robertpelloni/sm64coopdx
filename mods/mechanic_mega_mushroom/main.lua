@@ -9,25 +9,14 @@ local SCALE_TARGET = 4.0
 
 -- Ensure inventory dependency is loaded
 function mm_init()
-    if _G.Inventory and _G.Inventory.register_item then
-        _G.Inventory.register_item({
-            id = "mega_mushroom",
-            name = "Mega Mushroom",
-            type = "consumable",
-            description = "Grow to massive size and destroy enemies on contact for 15 seconds.",
-            rarity = "Epic",
-            use = function(m)
-                if gPlayerSyncTable[0].is_mega then
-                    djui_chat_message_create("Already mega!")
-                    return false
-                end
-                gPlayerSyncTable[0].is_mega = true
-                gPlayerSyncTable[0].mega_timer = MEGA_DURATION
-                play_sound(SOUND_MENU_STAR_SOUND, m.marioObj.header.gfx.cameraToObject)
-                djui_chat_message_create("MEGA MUSHROOM ACTIVATED!")
-                return true
-            end
-        })
+    if _G.Inventory and _G.Inventory.define_item then
+        _G.Inventory.define_item(
+            "mega_mushroom",
+            "Mega Mushroom",
+            "Grow to massive size and destroy enemies on contact for 15 seconds."
+        )
+        -- We don't have a direct "use" hook in Inventory API right now,
+        -- but if a generic "use item" command gets added, it would reference this.
     end
 end
 

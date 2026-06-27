@@ -31,12 +31,20 @@ function Trading.reset()
 end
 
 local function execute_trade(m)
+    -- As this is a pure P2P system without an authoritative server for trades,
+    -- both clients execute their respective halves of the trade.
+
     -- Verify my end
     local valid = true
     if m.numCoins < currentTrade.myOffer.coin then valid = false end
     for k,v in pairs(currentTrade.myOffer.items) do
         if _G.Inventory.get_item_count(m, k) < v then valid = false end
     end
+
+    -- In a real authoritative setup, the server would verify the partner's inventory as well.
+    -- To mitigate simple spoofing exploits where a malicious client sends a fake PACKET_TRADE_UPDATE
+    -- with items/coins they do not possess, we *must* enforce server-side item checks here if we had one.
+    -- Because we don't, we are trusting `currentTrade.partnerOffer` to be honest, which is inherently flawed P2P.
 
     if valid then
         m.numCoins = m.numCoins - currentTrade.myOffer.coin + currentTrade.partnerOffer.coin
@@ -52,6 +60,8 @@ local function execute_trade(m)
         play_sound(SOUND_GENERAL_COIN, m.marioObj.header.gfx.cameraToObject)
     else
         djui_chat_message_create("Trade failed: You don't have the offered items.")
+        -- Tell the partner the trade failed on our end
+        network_send_to(currentTrade.partnerId, true, {type = PACKET_TRADE_DEC, sender = m.playerIndex})
     end
 
     Trading.reset()

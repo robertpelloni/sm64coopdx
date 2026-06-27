@@ -95,19 +95,6 @@ function classes_ui_update(m)
         local selItem = classList[SELECTION]
         if selItem then
             Classes.set_class(m, selItem.id)
-
-            -- Initial inventory management based on class selection
-            if _G.Inventory and not gPlayerSyncTable[0].class_items_granted then
-                if selItem.id == Classes.TYPE_WARRIOR then
-                    Inventory.add_item(m, "weap_hammer", 1)
-                elseif selItem.id == Classes.TYPE_MAGE then
-                    Inventory.add_item(m, "potion_mana", 5)
-                elseif selItem.id == Classes.TYPE_ROGUE then
-                    Inventory.add_item(m, "weap_sword", 1)
-                end
-                gPlayerSyncTable[0].class_items_granted = true
-            end
-
             play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         end
     end

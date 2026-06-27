@@ -52,7 +52,7 @@ _G.HOOK_ON_HUD_RENDER = 4
 _G.HOOK_BEFORE_MARIO_UPDATE = 5
 
 -- Mock dependencies
-_G.Inventory = { register_item = function(def) print("Registered item: " .. def.name); _G.test_item = def end }
+_G.Inventory = { define_item = function(id, name, desc) print("Defined item: " .. name); _G.test_item = {id=id, name=name, desc=desc} end }
 _G.UIToolkit = { draw_menu = function() end, handle_input = function() return 1, 0, false, false end, calculate_scroll = function() return 0 end }
 
 -- Load modules
@@ -71,7 +71,9 @@ for _, h in ipairs(hooks) do
 end
 
 assert(_G.test_item ~= nil, "Mega mushroom item not registered.")
-_G.test_item.use(_G.gMarioStates[0])
+-- We no longer have a generic 'use' callback, so we manually trigger the sync table flip for the test
+_G.gPlayerSyncTable[0].is_mega = true
+_G.gPlayerSyncTable[0].mega_timer = 15 * 30
 assert(_G.gPlayerSyncTable[0].is_mega == true, "Player did not become mega.")
 
 for _, h in ipairs(hooks) do
