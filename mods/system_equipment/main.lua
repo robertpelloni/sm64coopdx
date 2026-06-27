@@ -23,9 +23,9 @@ function equipment_ui_render()
         table.insert(items, {
             slot = "Weapon",
             id = wId,
-            name = "[Weapon] " .. (def.name or "Unknown"),
-            right_text = "Dur: " .. tostring(sync.weapon_durability or 0) .. "/" .. tostring(def.maxDurability or 0),
-            tooltip = "Damage: " .. tostring(def.damage or 0) .. ". " .. (def.type or "Unknown") .. " type."
+            name = "[Weapon] " .. def.name,
+            right_text = "Dur: " .. tostring(sync.weapon_durability or 0) .. "/" .. tostring(def.maxDurability),
+            tooltip = "Damage: " .. tostring(def.damage) .. ". " .. def.type .. " type."
         })
     else
         table.insert(items, { slot = "Weapon", id = "none", name = "[Weapon] Empty", right_text = "", tooltip = "No weapon equipped." })
@@ -39,7 +39,7 @@ function equipment_ui_render()
             table.insert(items, {
                 slot = "Badge " .. i,
                 id = bId,
-                name = "[Badge " .. i .. "] " .. (def.name or "Unknown"),
+                name = "[Badge " .. i .. "] " .. def.name,
                 right_text = "",
                 tooltip = def.description or "A mystical badge."
             })

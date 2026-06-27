@@ -33,12 +33,12 @@ function PartyUI.render()
             table.insert(items, { id = "leave", name = "Leave Party", tooltip = "Leave your current party." })
 
             -- List Members
-            table.insert(items, { id = "member_self", name = network_get_player_text_color_string(0) .. gNetworkPlayers[0].name, right_text = "You", tooltip = "This is you." })
+            table.insert(items, { id = "member_self", name = gNetworkPlayers[0].name, right_text = "You", tooltip = "This is you." })
             for i = 1, MAX_PLAYERS - 1 do
                 if gNetworkPlayers[i].connected then
                     local ts = gPlayerSyncTable[i]
                     if ts and ts.partyId == sTable.partyId then
-                        table.insert(items, { id = "member_" .. tostring(i), name = network_get_player_text_color_string(i) .. gNetworkPlayers[i].name, tooltip = "Party Member." })
+                        table.insert(items, { id = "member_" .. tostring(i), name = gNetworkPlayers[i].name, tooltip = "Party Member." })
                     end
                 end
             end
