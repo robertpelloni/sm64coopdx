@@ -8,3 +8,4 @@
 *   **Security:** Command parsing (e.g., `/ah sell`, `/mail send`) MUST enforce positive integers for item counts and coin values to prevent severe integer underflow exploits.
 *   **C-Engine vs Lua:** The project uses the sm64coopdx C engine. Custom C functions like `network_player_kick` are exposed to Lua. The Headless mode `--headless` relies on `src/pc/gfx/gfx_dummy.c`.
 *   **Submodules:** The project currently does not use submodules (`bobcoin` was scrubbed). All custom logic resides in `mods/`.
+A Persistent World Connections system (`mods/system_waypoints/connections.lua`) utilizes position-based triggers to warp players seamlessly between levels (e.g., walking from Bob-omb Battlefield into Whomp's Fortress) without needing to return to the Castle Hub, creating a contiguous MMORPG map layout.
