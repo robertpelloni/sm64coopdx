@@ -18,14 +18,14 @@ function equipment_ui_render()
 
     -- 1. Weapon Slot
     local wId = sync.equipped_weapon
-    if wId and _G.Weapons and Weapons.registry[wId] then
-        local def = Weapons.registry[wId]
+    if wId and _G.Inventory and _G.Inventory.items[wId] then
+        local def = _G.Inventory.items[wId]
         table.insert(items, {
             slot = "Weapon",
             id = wId,
             name = "[Weapon] " .. def.name,
-            right_text = "Dur: " .. tostring(sync.weapon_durability or 0) .. "/" .. tostring(def.maxDurability),
-            tooltip = "Damage: " .. tostring(def.damage) .. ". " .. def.type .. " type."
+            right_text = "Dur: " .. tostring(sync.weapon_durability or 0) .. "/" .. "100",
+            tooltip = "Damage: " .. tostring(def.value) .. ". " .. "Melee" .. " type."
         })
     else
         table.insert(items, { slot = "Weapon", id = "none", name = "[Weapon] Empty", right_text = "", tooltip = "No weapon equipped." })
