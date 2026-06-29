@@ -6,10 +6,10 @@ local UI_VISIBLE = false
 local SELECTION = 1
 local SCROLL_OFFSET = 0
 local OPEN_TIMER = 0
-local UI_MODE = "browse" -- "browse" or "sell"
+local UI_MODE = "browse" -- "browse", "sell", "sell_price"
 
 -- Dynamic Pricing State
-local current_price = 100
+local current_price = "100"
 
 function ah_ui_render()
     if not UI_VISIBLE then return end
@@ -29,73 +29,67 @@ function ah_ui_render()
             local name = def and def.name or listing.itemId
             table.insert(items, {
                 id = listing.id,
-                listing = listing,
                 name = name,
                 right_text = tostring(listing.price) .. "c",
                 tooltip = "Seller: " .. listing.seller .. "\nQuantity: " .. tostring(listing.count)
             })
         end
+
         if #items == 0 then
-            table.insert(items, { id = "none", name = "No listings available.", right_text = "", tooltip = "The market is empty." })
+            table.insert(items, { id = "none", name = "No listings.", right_text = "", tooltip = "The market is empty." })
         end
 
     elseif UI_MODE == "sell" then
-        title = "AUCTION HOUSE - SELL (SELECT ITEM)"
-        footer = "A: Sell  L/R: Set Price  X: Browse  B: Close"
+        title = "AUCTION HOUSE - SELL"
+        footer = "A: Set Price  X: Browse Mode  B: Close"
 
-        local raw_items = _G.Inventory.get_all_items(m)
-        for _, item in ipairs(raw_items) do
-            local def = _G.Inventory.items[item.id]
+        local inv = _G.Inventory and _G.Inventory.get_all_items(m) or {}
+        for _, it in ipairs(inv) do
             table.insert(items, {
-                id = item.id,
-                name = def and def.name or item.id,
-                right_text = "x" .. tostring(item.count),
-                tooltip = "Select to list on the Auction House."
+                id = it.id,
+                name = it.name,
+                right_text = "x" .. tostring(it.count),
+                tooltip = "Select to list 1x for sale."
             })
         end
+
         if #items == 0 then
             table.insert(items, { id = "none", name = "Inventory empty.", right_text = "", tooltip = "You have nothing to sell." })
         end
+
+    elseif UI_MODE == "sell_price" then
+        title = "AUCTION HOUSE - SET PRICE"
+        footer = "Up/Dn/L/R/Y: Type | A: Confirm | B: Cancel"
+        table.insert(items, { id = "price", name = "Price: " .. current_price .. "c", tooltip = "Use D-Pad to set the price for your item." })
     end
 
     local renderDetails = function(x, y, selItem)
-        if selItem.id == "none" then return end
+        djui_hud_set_color(255, 255, 255, 255)
+        djui_hud_print_text(selItem.name, x, y, 1.2)
+        djui_hud_set_color(200, 200, 200, 255)
 
         if UI_MODE == "browse" then
-            local l = selItem.listing
-            local def = _G.Inventory and _G.Inventory.items[l.itemId]
-            djui_hud_set_color(0, 255, 255, 255)
-            djui_hud_print_text(def and def.name or l.itemId, x, y, 1.2)
-
-            djui_hud_set_color(200, 200, 200, 255)
-            UIToolkit.draw_wrapped_text("Seller: " .. l.seller, x, y + 40, 25, 0.9)
-            UIToolkit.draw_wrapped_text("Quantity: " .. tostring(l.count), x, y + 60, 25, 0.9)
-
-            djui_hud_set_color(255, 255, 0, 255)
-            djui_hud_print_text("Price: " .. tostring(l.price) .. " coins", x, y + 100, 1.0)
-
-            if m.numCoins < l.price then
-                djui_hud_set_color(255, 100, 100, 255)
-                djui_hud_print_text("Not enough coins!", x, y + 120, 0.8)
+            local l = nil
+            for _, ls in ipairs(AuctionHouse.listings) do if ls.id == selItem.id then l = ls break end end
+            if l then
+                UIToolkit.draw_wrapped_text("Seller: " .. l.seller, x, y + 40, 25, 0.9)
+                UIToolkit.draw_wrapped_text("Count: " .. tostring(l.count), x, y + 60, 25, 0.9)
+                UIToolkit.draw_wrapped_text("Price: " .. tostring(l.price) .. "c", x, y + 80, 25, 0.9)
+            else
+                UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 25, 0.9)
             end
-
         elseif UI_MODE == "sell" then
-            local def = _G.Inventory and _G.Inventory.items[selItem.id]
-            djui_hud_set_color(0, 255, 255, 255)
-            djui_hud_print_text(def and def.name or selItem.id, x, y, 1.2)
-
-            djui_hud_set_color(200, 200, 200, 255)
-            UIToolkit.draw_wrapped_text(def and def.description or "", x, y + 40, 25, 0.9)
-
+            UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 25, 0.9)
             djui_hud_set_color(255, 255, 0, 255)
-            djui_hud_print_text("< Price: " .. tostring(current_price) .. "c >", x, y + 100, 1.0)
-
-            djui_hud_set_color(150, 255, 150, 255)
-            UIToolkit.draw_wrapped_text("Press A to list 1x for " .. tostring(current_price) .. "c", x, y + 140, 25, 0.8)
+            djui_hud_print_text("Sell 1x at Market Value", x, y + 100, 0.8)
+        elseif UI_MODE == "sell_price" then
+            UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 25, 0.9)
+            djui_hud_set_color(255, 255, 0, 255)
+            djui_hud_print_text("Enter price using D-Pad", x, y + 100, 0.8)
         end
     end
 
-    UIToolkit.draw_menu(title, items, SELECTION, SCROLL_OFFSET, renderDetails, footer, "Trade goods globally with other players.")
+    UIToolkit.draw_menu(title, items, SELECTION, SCROLL_OFFSET, renderDetails, footer)
 end
 
 function ah_ui_update(m)
@@ -103,40 +97,83 @@ function ah_ui_update(m)
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
-    if (m.controller.buttonPressed & X_BUTTON) ~= 0 then
-        if UI_MODE == "browse" then UI_MODE = "sell" else UI_MODE = "browse" end
+    if (m.controller.buttonPressed & X_BUTTON) ~= 0 and OPEN_TIMER <= 0 then
+        if UI_MODE == "browse" then UI_MODE = "sell"
+        elseif UI_MODE == "sell" then UI_MODE = "browse" end
         SELECTION = 1
         SCROLL_OFFSET = 0
-        current_price = 100 -- reset price on mode switch
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        OPEN_TIMER = 5
+        play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         return
     end
 
-    -- Dynamic Price Adjustment
-    if UI_MODE == "sell" then
-        -- Handle both pressed and held for fast scrolling
-        if (m.controller.buttonDown & R_JPAD) ~= 0 then
-            current_price = current_price + 1
-            if (m.controller.buttonPressed & R_JPAD) ~= 0 then play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject) end
-        elseif (m.controller.buttonDown & L_JPAD) ~= 0 then
-            current_price = math.max(1, current_price - 1)
-            if (m.controller.buttonPressed & L_JPAD) ~= 0 then play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject) end
+    if UI_MODE == "sell_price" then
+        local newText, submitted, cancelled, newTimer = UIToolkit.handle_text_input(m, current_price, OPEN_TIMER)
+        current_price = newText
+        OPEN_TIMER = newTimer
+
+        if cancelled then
+            UI_MODE = "sell"
+            OPEN_TIMER = 5
+            return
         end
+
+        if submitted then
+            local priceInt = math.floor(tonumber(current_price) or 0)
+            if priceInt <= 0 then
+                djui_chat_message_create("Price must be greater than 0.")
+                play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                OPEN_TIMER = 5
+                return
+            end
+
+            -- Find the item we were selling
+            local inv = _G.Inventory and _G.Inventory.get_all_items(m) or {}
+            local item = inv[SELECTION]
+
+            if item then
+                local count = 1
+                if _G.Inventory and Inventory.remove_item(m, item.id, count) then
+                    local listingId = tostring(os.time()) .. "_" .. tostring(math.random(1000, 9999))
+                    table.insert(AuctionHouse.listings, {
+                        id = listingId,
+                        seller = network_get_player_text_color_string(m.playerIndex) .. "Player",
+                        itemId = item.id,
+                        count = count,
+                        price = priceInt
+                    })
+                    if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
+                    play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
+                    djui_chat_message_create("Listed 1x " .. item.id .. " for " .. tostring(priceInt) .. "c")
+                else
+                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
+                    djui_chat_message_create("Error listing item.")
+                end
+            end
+
+            UI_MODE = "sell"
+            OPEN_TIMER = 5
+            return
+        end
+        return
     end
 
-    local maxItems = 1
     local list = {}
     if UI_MODE == "browse" then
-        maxItems = #AuctionHouse.listings > 0 and #AuctionHouse.listings or 1
         list = AuctionHouse.listings
-    else
-        local inv = _G.Inventory.get_all_items(m)
-        maxItems = #inv > 0 and #inv or 1
-        list = inv
+    elseif UI_MODE == "sell" then
+        list = _G.Inventory and _G.Inventory.get_all_items(m) or {}
     end
 
-    -- We pass 0 for maxItems to handle_input for UP/DOWN so it doesn't conflict with our custom L/R logic if we needed to modify handle_input,
-    -- but UIToolkit.handle_input only reads D_JPAD and U_JPAD, so it's safe.
+    local maxItems = #list
+    if maxItems == 0 then
+        if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+            UI_VISIBLE = false
+            set_mario_action(m, ACT_IDLE, 0)
+        end
+        return
+    end
+
     local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
@@ -166,26 +203,10 @@ function ah_ui_update(m)
                 end
             end
         elseif UI_MODE == "sell" and #list > 0 then
-            local item = list[SELECTION]
-            if item then
-                local count = 1
-                if _G.Inventory and Inventory.remove_item(m, item.id, count) then
-                    local listingId = tostring(os.time()) .. "_" .. tostring(math.random(1000, 9999))
-                    table.insert(AuctionHouse.listings, {
-                        id = listingId,
-                        seller = network_get_player_text_color_string(m.playerIndex) .. "Player",
-                        itemId = item.id,
-                        count = count,
-                        price = current_price
-                    })
-                    if _G.SaveManager then SaveManager.request_save() else SafeSave("AuctionHouse") end
-                    play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-                    djui_chat_message_create("Listed 1x " .. item.id .. " for " .. tostring(current_price) .. "c")
-                else
-                    play_sound(SOUND_MENU_CAMERA_BUZZ, m.marioObj.header.gfx.cameraToObject)
-                    djui_chat_message_create("Error listing item.")
-                end
-            end
+            UI_MODE = "sell_price"
+            current_price = "100"
+            OPEN_TIMER = 5
+            play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         end
     end
 
@@ -201,7 +222,7 @@ function AuctionHouse.toggle_ui()
         SCROLL_OFFSET = 0
         OPEN_TIMER = 5
         UI_MODE = "browse"
-        current_price = 100
+        current_price = "100"
     end
 end
 
