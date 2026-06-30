@@ -38,13 +38,13 @@ function UIToolkit.draw_wrapped_text(text, x, y, maxLen, scale)
             local g = tonumber(string.sub(hexColor, 3, 4), 16)
             local b = tonumber(string.sub(hexColor, 5, 6), 16)
             djui_hud_set_color(r, g, b, 255)
-            cleanWord = string.gsub(word, "\\#%x%x%x%x%x%x\\", "")
+            cleanWord = string.gsub(word, "\\#%x+\\", "")
         end
 
         -- Default back to standard color if explicitly requested (e.g. \#FFFFFF\)
         if string.match(word, "\\#FFFFFF\\") then
             djui_hud_set_color(200, 200, 200, 255)
-            cleanWord = string.gsub(cleanWord, "\\#FFFFFF\\", "")
+            cleanWord = string.gsub(cleanWord, "\\#%x+\\", "")
         end
 
         local wordLen = string.len(cleanWord)

@@ -18,6 +18,7 @@ The project structure is organized as follows:
     -   `mods/mechanic_telekinesis/`: Telekinesis mechanic (Psychonauts style).
     -   `mods/mechanic_transformation/`: Transformation API (Banjo style).
     -   `mods/mechanic_vehicle/`: Vehicle mechanic (Zoomer).
+    -   `mods/abilities/`: Custom scalable movement abilities (Double Jump, Ground Pound Jump, Dive Slide, Long Jump).
     -   `mods/system_achievements/`: Achievements and Titles system.
     -   `mods/system_classes/`: RPG Class system (Warrior/Mage/Rogue).
     -   `mods/system_guilds/`: Guild system, Chat, and Nametags.

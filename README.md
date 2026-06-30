@@ -42,6 +42,11 @@ This project transforms SM64 into an MMORPG with persistent inventory, quests, g
     *   `/admin tp [name]`: Teleport to a player.
 
 ### Movement Abilities
+*   **Double Jump**: Press `A` right after landing from a first jump.
+*   **Ground Pound**: Press `Z` in the air to slam down.
+*   **Ground Pound Jump**: Press `A` as you land from a Ground Pound to jump high.
+*   **Long Jump**: While running, press `Z` then `A` to cover long distances. Scales with agility.
+*   **Dive Slide**: Press `B` while running. Hold `B` to maintain momentum.
 *   **Sonic Boost**: While moving on ground, press `X`. Requires Boost Meter.
 *   **Spyro Glide**: In air, hold `L + A` to glide.
 *   **FLUDD**: Equip a nozzle (Hover, Rocket, Turbo) from Inventory.
