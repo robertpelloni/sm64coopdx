@@ -34,6 +34,9 @@ Classes.defs = {
         desc = "High health, strong melee.",
         hp_bonus = 2,
         speed_mult = 0.9,
+        base_hp = 150,
+        base_speed = 0.9,
+        base_magic = 50,
         ability_1 = "Bash (Stun)",
         ability_2 = "Rage (Invulnerability)",
         talents = {
@@ -46,6 +49,9 @@ Classes.defs = {
         desc = "Ranged magic, glass cannon.",
         hp_bonus = -1,
         speed_mult = 1.0,
+        base_hp = 80,
+        base_speed = 1.0,
+        base_magic = 200,
         ability_1 = "Fireball",
         ability_2 = "Teleport",
         talents = {
@@ -58,6 +64,9 @@ Classes.defs = {
         desc = "Fast, stealthy.",
         hp_bonus = 0,
         speed_mult = 1.2,
+        base_hp = 100,
+        base_speed = 1.2,
+        base_magic = 100,
         ability_1 = "Dash",
         ability_2 = "Invisibility",
         talents = {
@@ -74,6 +83,21 @@ function Classes.set_class(m, type)
     local def = Classes.defs[type]
     if def then
         djui_chat_message_create("Class set to: " .. def.name)
+
+        -- Starting Loadouts
+        if not sTable.class_items_granted and _G.Inventory then
+            if type == Classes.TYPE_WARRIOR then
+                Inventory.add_item(m, "weap_sword", 1)
+            elseif type == Classes.TYPE_MAGE then
+                Inventory.add_item(m, "potion_mana", 5)
+            elseif type == Classes.TYPE_ROGUE then
+                Inventory.add_item(m, "potion_health", 5)
+            end
+            sTable.class_items_granted = true
+            djui_chat_message_create("Starting items granted!")
+        end
+
+        if _G.SaveManager then SaveManager.request_save() else Classes.save() end
     end
 end
 
@@ -90,10 +114,71 @@ function Classes.unlock_talent(m, talentId)
     if not sTable.talents then sTable.talents = "" end
     if not string.find(sTable.talents, talentId) then
         sTable.talents = sTable.talents .. talentId .. ","
+        if _G.SaveManager then SaveManager.request_save() else Classes.save() end
         return true
     end
     return false
 end
+
+-- Persistence
+function Classes.save()
+    local m = gMarioStates[0]
+    local sTable = gPlayerSyncTable[m.playerIndex]
+
+    local cType = sTable.classType or 0
+    local talents = sTable.talents or ""
+    local granted = sTable.class_items_granted and "1" or "0"
+
+    local data = cType .. ":" .. talents .. ":" .. granted
+    mod_storage_save("player_class_data", data)
+end
+
+function Classes.load()
+    local m = gMarioStates[0]
+    local sTable = gPlayerSyncTable[m.playerIndex]
+
+    local data = mod_storage_load("player_class_data")
+    if data and data ~= "" then
+        local cTypeStr, talentsStr, grantedStr = string.match(data, "(%d+):(.*):(%d+)")
+        if cTypeStr then
+            sTable.classType = tonumber(cTypeStr)
+            sTable.talents = talentsStr
+            sTable.class_items_granted = (grantedStr == "1")
+        end
+    end
+end
+
+local function on_level_init()
+    if not _G.CLASSES_LOADED then
+        Classes.load()
+        _G.CLASSES_LOADED = true
+    end
+end
+
+hook_event(HOOK_ON_LEVEL_INIT, on_level_init)
+
+-- Chat Command
+local function on_class_command(msg)
+    local m = gMarioStates[0]
+    if msg == "" then
+        if Classes.toggle_ui then Classes.toggle_ui() end
+        return true
+    end
+
+    local role = string.lower(msg)
+    if role == "warrior" then
+        Classes.set_class(m, Classes.TYPE_WARRIOR)
+    elseif role == "mage" then
+        Classes.set_class(m, Classes.TYPE_MAGE)
+    elseif role == "rogue" then
+        Classes.set_class(m, Classes.TYPE_ROGUE)
+    else
+        djui_chat_message_create("Invalid class. Use warrior, mage, or rogue.")
+    end
+    return true
+end
+
+hook_chat_command("class", "Select your class (warrior, mage, rogue)", on_class_command)
 
 function classes_update(m)
     if m.playerIndex ~= 0 then return end
@@ -209,6 +294,15 @@ function classes_hud()
 
     local w = djui_hud_get_screen_width()
     local h = djui_hud_get_screen_height()
+
+    -- Draw class stats top left
+    local def = Classes.defs[sTable.classType]
+    if def then
+        djui_hud_set_color(255, 255, 255, 255)
+        djui_hud_print_text("[" .. def.name .. "]", 10, 10, 1.2)
+        djui_hud_set_color(200, 200, 200, 255)
+        djui_hud_print_text("HP: " .. tostring(def.base_hp) .. "  Spd: " .. tostring(def.base_speed) .. "  MP: " .. tostring(def.base_magic), 10, 35, 0.8)
+    end
 
     -- Draw slots bottom center
     local x = w / 2 - 60

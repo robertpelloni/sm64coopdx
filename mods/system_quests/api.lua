@@ -24,6 +24,12 @@ function Quest.start(m, id)
     local sTable = gPlayerSyncTable[m.playerIndex]
     if sTable[get_q_key(id)] == STATUS_COMPLETE then return false end -- Already done
 
+    -- Role Restriction
+    if def.classReq and def.classReq ~= sTable.classType then
+        djui_chat_message_create("Your class cannot start this quest.")
+        return false
+    end
+
     sTable[get_q_key(id)] = STATUS_ACTIVE
     sTable[get_p_key(id)] = 0
 

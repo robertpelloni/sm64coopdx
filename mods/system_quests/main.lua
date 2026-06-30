@@ -8,6 +8,14 @@ Quest.register("coin_collector", {
     reward = {item = "coin_bag", amount = 50}
 })
 
+Quest.register("warrior_initiation", {
+    name = "Warrior Initiation",
+    description = "A trial only for those who tread the path of the Warrior.",
+    target = 1,
+    classReq = 1, -- Classes.TYPE_WARRIOR
+    reward = {item = "coin_bag", amount = 100}
+})
+
 -- Test Command
 function on_start_quest(msg)
     local m = gMarioStates[0]

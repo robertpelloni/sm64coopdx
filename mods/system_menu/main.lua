@@ -4,61 +4,6 @@
 
 local UI_VISIBLE = false
 local SELECTION = 1
-<<<<<<< HEAD
-
-local OPTIONS = {
-    {
-        name = "Resume",
-        description = "Return to the game.",
-        action = function() MENU_OPEN = false end
-    },
-    {
-        name = "Inventory",
-        description = "View items, equipment, and resources.",
-        action = function() if _G.Inventory and _G.Inventory.toggle_ui then _G.Inventory.toggle_ui() end end
-    },
-    {
-        name = "Quests",
-        description = "Track active quests and objectives.",
-        action = function() if _G.Quest and _G.Quest.toggle_ui then _G.Quest.toggle_ui() end end
-    },
-    {
-        name = "Classes",
-        description = "View class abilities. (Use /class [name])",
-        action = function() djui_chat_message_create("Use /class [warrior|mage|rogue]") end
-    },
-    {
-        name = "Guild",
-        description = "Manage guild membership. (Use /guild)",
-        action = function() djui_chat_message_create("Use /guild [join|leave] [name]") end
-    },
-    {
-        name = "Party",
-        description = "Manage your party. (Use /party)",
-        action = function() djui_chat_message_create("Use /party [create|invite|join|leave]") end
-    },
-    {
-        name = "Config",
-        description = "Change game settings. (Use /config)",
-        action = function() djui_chat_message_create("Use /config [setting] [value]") end
-    },
-    {
-        name = "Admin",
-        description = "Server administration tools. (Host Only)",
-        action = function() if _G.Admin and _G.Admin.toggle_ui then _G.Admin.toggle_ui() end end,
-        condition = function() return network_is_server() end
-    },
-    {
-        name = "Help",
-        description = "View game manual. (Use /help)",
-        action = function() djui_chat_message_create("Use /help [topic]") end
-    },
-    {
-        name = "Close",
-        description = "Close the menu.",
-        action = function() MENU_OPEN = false end
-    }
-=======
 local SCROLL_OFFSET = 0
 local OPEN_TIMER = 0
 
@@ -74,161 +19,63 @@ local menu_items = {
     { id = "stats",     name = "Stats",      action = function() if _G.Progression then Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
     { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
     { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
-    { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." }
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
+    { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." },
+    { id = "admin",     name = "Admin",      action = function() if _G.Admin then Admin.toggle_ui() end end, tooltip = "Server administration tools.", condition = function() return network_is_server() end },
+    { id = "close",     name = "Close",      action = function() UI_VISIBLE = false end, tooltip = "Close the main menu." }
 }
 
 function main_menu_render()
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
-<<<<<<< HEAD
-    local w = djui_hud_get_screen_width()
-    local h = djui_hud_get_screen_height()
-    local cx = w / 2
-    local cy = h / 2
-
-    -- Background
-    djui_hud_set_color(0, 0, 50, 240)
-    djui_hud_render_rect(cx - 150, cy - 160, 300, 320)
-
-    -- Title
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("MAIN MENU", cx - 45, cy - 140, 1)
-
-    -- Filter Options based on condition
-    local visibleOptions = {}
-    for _, opt in ipairs(OPTIONS) do
-        if not opt.condition or opt.condition() then
-            table.insert(visibleOptions, opt)
+    local visible_items = {}
+    for _, item in ipairs(menu_items) do
+        if not item.condition or item.condition() then
+            table.insert(visible_items, item)
         end
     end
 
-    -- Options
-    local startY = cy - 100
-    for i, opt in ipairs(visibleOptions) do
-        if i == SELECTION then
-            djui_hud_set_color(255, 255, 0, 255)
-            djui_hud_print_text("> " .. opt.name, cx - 100, startY + (i-1)*25, 1)
-        else
-            djui_hud_set_color(200, 200, 200, 255)
-            djui_hud_print_text("  " .. opt.name, cx - 100, startY + (i-1)*25, 1)
-        end
-    end
-
-    -- Description Footer
-    if SELECTION > #visibleOptions then SELECTION = #visibleOptions end
-    if SELECTION < 1 then SELECTION = 1 end
-
-    local selOpt = visibleOptions[SELECTION]
-    if selOpt and selOpt.description then
-        djui_hud_set_color(150, 150, 150, 255)
-        local descW = djui_hud_measure_text(selOpt.description)
-        -- Center it roughly
-        djui_hud_print_text(selOpt.description, cx - descW/2, cy + 140, 1)
-=======
     local renderDetails = function(x, y, selItem)
         djui_hud_set_color(255, 255, 255, 255)
-        djui_hud_print_text(selItem.name, x, y, 1)
+        djui_hud_print_text(selItem.name, x, y, 1.2)
         djui_hud_set_color(200, 200, 200, 255)
-        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 22, 0.8)
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
+        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 25, 0.9)
     end
 
-    UIToolkit.draw_menu("MAIN MENU", menu_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Central Hub for all your character needs.")
+    UIToolkit.draw_menu("MAIN MENU", visible_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Use this menu to access all game systems.")
 end
 
 function main_menu_update(m)
     if m.playerIndex ~= 0 then return end
 
-    -- Toggle Menu
-    if (m.controller.buttonDown & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
-<<<<<<< HEAD
-        MENU_OPEN = not MENU_OPEN
-        if MENU_OPEN then
-            -- Close overlapping UIs
-            if _G.Inventory and _G.Inventory.close_ui then _G.Inventory.close_ui() end
-            if _G.Quest and _G.Quest.close_ui then _G.Quest.close_ui() end
-            if _G.Admin and _G.Admin.toggle_ui then -- Ensure Admin UI is closed? No close function exposed, toggle resets state usually.
-                -- Actually Admin UI uses toggle_ui to open, so we might need a dedicated close.
-                -- For now, just rely on ACT_WAITING_FOR_DIALOG overrides.
-            end
-
-            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
-=======
+    if (m.controller.buttonPressed & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
         UI_VISIBLE = not UI_VISIBLE
         if UI_VISIBLE then
             SELECTION = 1
             SCROLL_OFFSET = 0
             OPEN_TIMER = 5
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
-        else
-            set_mario_action(m, ACT_IDLE, 0)
         end
         return
     end
 
-<<<<<<< HEAD
-    if not MENU_OPEN then return end
-
-    -- Force freeze
-    if m.action ~= ACT_WAITING_FOR_DIALOG then
-        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
-    end
-
-    -- Dynamic Options List
-    local visibleOptions = {}
-    for _, opt in ipairs(OPTIONS) do
-        if not opt.condition or opt.condition() then
-            table.insert(visibleOptions, opt)
-        end
-    end
-
-    -- Navigation
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        SELECTION = SELECTION + 1
-        if SELECTION > #visibleOptions then SELECTION = 1 end
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        SELECTION = SELECTION - 1
-        if SELECTION < 1 then SELECTION = #visibleOptions end
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-
-    -- Select
-    if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
-        local opt = visibleOptions[SELECTION]
-        if opt and opt.action then
-            play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-            opt.action()
-
-            -- Close Main Menu if opening a subsystem UI
-            if opt.name == "Inventory" or opt.name == "Quests" or opt.name == "Admin" or opt.name == "Resume" or opt.name == "Close" then
-                MENU_OPEN = false
-                if opt.name == "Resume" or opt.name == "Close" then
-                    set_mario_action(m, ACT_IDLE, 0)
-                end
-            end
-        end
-    end
-
-    -- Back
-    if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-        MENU_OPEN = false
-        set_mario_action(m, ACT_IDLE, 0)
-=======
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
-    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #menu_items, OPEN_TIMER)
+    local visible_items = {}
+    for _, item in ipairs(menu_items) do
+        if not item.condition or item.condition() then
+            table.insert(visible_items, item)
+        end
+    end
+
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #visible_items, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
-    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #menu_items)
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #visible_items)
 
     if act then
         play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-        local item = menu_items[SELECTION]
+        local item = visible_items[SELECTION]
         if item and item.action then
             UI_VISIBLE = false
             set_mario_action(m, ACT_IDLE, 0)
@@ -238,7 +85,6 @@ function main_menu_update(m)
 
     if close then
         UI_VISIBLE = false
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
 end
 
