@@ -1,6 +1,15 @@
 # Changelog
 
-## v1.16 (Current)
+## v1.18 (Current)
+- **Class System**: Fully implemented class stat blocks (Warrior, Mage, Rogue), dynamic top-left HUD updates, and initial class loadouts (weapons/potions) strictly protected from farming via a granted flag. Added `/class` role chat command for direct selection.
+- **Quest System Integration**: Quests now natively support `classReq` attributes, preventing players from accepting quests outside their chosen discipline.
+- **Movement Abilities**: Formalized custom platformer actions in the UI and documentation.
+
+## v1.17
+- **Abilities Framework**: Integrated scalable Double Jump, Ground Pound Jump, Dive Slide momentum capping, and Enhanced Long Jump.
+- **Bug Fixes**: Cleared up formatting string regex issues in UI Tooltips and replaced outdated weapon placeholders with actual engine-supported meshes.
+
+## v1.16
 - **Party UI**: Added a comprehensive visual menu for managing parties (create, join, invite, leave) directly tied into `UIToolkit`.
 
 ## v1.15
