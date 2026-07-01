@@ -16,6 +16,7 @@ During this execution cycle, I reviewed all instructional materials, documentati
 *   **Main Menu Input Freeze Fix**: Completely overhauled the Main Menu execution block to ensure Mario is properly locked into `ACT_WAITING_FOR_DIALOG` natively so he cannot run around while interacting with the menu.
 *   **Menu Restoration**: Re-implemented the `Config` menu option into the main layout array, completing the full mapping.
 *   **Security Validation**: Further tested `math.floor(tonumber())` logic for edge cases on negative values.
+*   **UI Tooltips & Crash Prevention**: Restored the `_G.Quest.defs` lookup logic inside the Quest UI, preventing null reference loops and rendering crashes. Fixed the variable-length regex color parser (`string.match`) inside the `UIToolkit` text wrapper to handle arbitrary hex structures cleanly.
 
 ### Documentation Audit Notes
 During the project audit, all requested documentation files were successfully found and reviewed. This includes `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `GPT.md`, `copilot-instructions.md`, `VISION.md`, `ROADMAP_MMORPG.md`, `TODO.md`, `HANDOFF.md`, `DEPLOY.md`, `CHANGELOG.md`, `VERSION.md`, and `SUBMODULE_INVENTORY.md` (if applicable).

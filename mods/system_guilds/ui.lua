@@ -124,6 +124,7 @@ function guilds_ui_update(m)
 
     if close then
         UI_VISIBLE = false
+        set_mario_action(m, ACT_IDLE, 0)
     end
 end
 

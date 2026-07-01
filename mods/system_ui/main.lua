@@ -30,14 +30,16 @@ function UIToolkit.draw_wrapped_text(text, x, y, maxLen, scale)
 
     for _, word in ipairs(words) do
         -- Basic Color Code Parsing: \#RRGGBB\
-        local hexColor = string.match(word, "\\#(%x%x%x%x%x%x)\\")
+        local hexColor = string.match(word, "\\#(%x+)\\")
         local cleanWord = word
 
         if hexColor then
-            local r = tonumber(string.sub(hexColor, 1, 2), 16)
-            local g = tonumber(string.sub(hexColor, 3, 4), 16)
-            local b = tonumber(string.sub(hexColor, 5, 6), 16)
-            djui_hud_set_color(r, g, b, 255)
+            if string.len(hexColor) >= 6 then
+                local r = tonumber(string.sub(hexColor, 1, 2), 16)
+                local g = tonumber(string.sub(hexColor, 3, 4), 16)
+                local b = tonumber(string.sub(hexColor, 5, 6), 16)
+                djui_hud_set_color(r, g, b, 255)
+            end
             cleanWord = string.gsub(word, "\\#%x+\\", "")
         end
 
@@ -240,14 +242,10 @@ function UIToolkit.draw_text_input(title, currentText, footer, helpText)
     djui_hud_set_color(200, 200, 200, 255)
     local strX = cx - WIN_WIDTH/2 + 40
     local strY = cy
-
     djui_hud_print_text(displayStr, strX, strY, 1.5)
 
-    -- Highlight the character currently under the cursor
-    local cursorChar = string.sub(displayStr, cursor_pos, cursor_pos)
-    if cursorChar == "" then cursorChar = "_" end
-
-    -- We approximate width by doing a quick measurement.
+    -- Cursor
+    local cursorChar = string.sub(CHAR_SET, char_index, char_index)
     local widthBeforeCursor = djui_hud_measure_text(string.sub(displayStr, 1, cursor_pos - 1)) * 1.5
 
     djui_hud_set_color(255, 255, 0, 255)
