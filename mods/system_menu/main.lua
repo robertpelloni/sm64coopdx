@@ -18,6 +18,7 @@ local menu_items = {
     { id = "party",     name = "Party",      action = function() if _G.Party then Party.toggle_ui() end end, tooltip = "Manage your current party." },
     { id = "stats",     name = "Stats",      action = function() if _G.Progression then Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
     { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
+    { id = "dungeons",  name = "Dungeons",   action = function() if _G.DungeonUI then DungeonUI.toggle_ui() end end, tooltip = "Enter instanced dungeon encounters." },
     { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
     { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." },
     { id = "config",    name = "Config",     action = function() djui_chat_message_create("Use /config [setting] [value]") end, tooltip = "Change game settings." },

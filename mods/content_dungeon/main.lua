@@ -70,17 +70,11 @@ local id_bhvDungeonMaster = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_dung
 
 -- Entrance Command
 function on_dungeon_enter(msg)
-    local m = gMarioStates[0]
-    local inst = math.random(1000, 9999)
-    local sTable = gPlayerSyncTable[0]
-    sTable.instanceID = inst
-
-    if initiate_warp then
-        initiate_warp(DUNGEON_LEVEL, DUNGEON_AREA, 1, 0)
+    if _G.DungeonUI then
+        DungeonUI.toggle_ui()
+    else
+        djui_chat_message_create("Dungeon UI is not available.")
     end
-
-    _G.PENDING_DUNGEON_SPAWN = true
-    djui_chat_message_create("Entering Crypt of the Vanished...")
     return true
 end
 

@@ -1,6 +1,10 @@
 # Changelog
 
-## v1.18 (Current)
+## v1.19 (Current)
+- **Mechanics**: Implemented a "Mid-Air Double Jump" ability tracked via `gPlayerSyncTable` (flattened keys). Added a corresponding training quest in `system_quests`.
+- **Dungeons**: Fully implemented the `Crypt of the Vanished` instanced procedural dungeon UI. Added a centralized UI selection menu for Normal, Heroic, and Mythic difficulty scaling, accessible directly from the Main Menu.
+
+## v1.18
 - **Class System**: Fully implemented class stat blocks (Warrior, Mage, Rogue), dynamic top-left HUD updates, and initial class loadouts (weapons/potions) strictly protected from farming via a granted flag. Added `/class` role chat command for direct selection.
 - **Quest System Integration**: Quests now natively support `classReq` attributes, preventing players from accepting quests outside their chosen discipline.
 - **Movement Abilities**: Formalized custom platformer actions in the UI and documentation.
