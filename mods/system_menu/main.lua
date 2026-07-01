@@ -48,7 +48,7 @@ end
 function main_menu_update(m)
     if m.playerIndex ~= 0 then return end
 
-    if (m.controller.buttonPressed & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
+    if (m.controller.buttonDown & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
         UI_VISIBLE = not UI_VISIBLE
         if UI_VISIBLE then
             SELECTION = 1
@@ -60,6 +60,10 @@ function main_menu_update(m)
 
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
+
+    if m.action ~= ACT_WAITING_FOR_DIALOG then
+        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+    end
 
     local visible_items = {}
     for _, item in ipairs(menu_items) do

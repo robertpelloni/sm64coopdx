@@ -104,6 +104,7 @@ function GuildBank.request_action(actionType, itemId, count)
         return false
     end
 
+    count = math.floor(tonumber(count) or 0)
     if count <= 0 then return false end
 
     -- `m.playerIndex` is a local index which does not uniquely map the player to the server.
@@ -140,7 +141,8 @@ function on_bank_packet(p)
         local senderId = p.senderId
 
         -- Validate request
-        if action ~= "request_sync" and (not count or count <= 0) then return end
+        count = math.floor(tonumber(count) or 0)
+        if action ~= "request_sync" and count <= 0 then return end
 
         local targetLocalIndex = network_local_index_from_global(senderId)
         local senderTable = gPlayerSyncTable[targetLocalIndex]

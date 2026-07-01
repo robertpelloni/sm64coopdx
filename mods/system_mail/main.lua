@@ -62,6 +62,11 @@ function on_mail_receive(data)
 end
 
 function Mail.send(senderName, targetPlayerName, subject, body, attachment)
+    if attachment then
+        attachment.count = math.floor(tonumber(attachment.count) or 0)
+        if attachment.count <= 0 then attachment = nil end
+    end
+
     -- Find the target player index
     local targetIndex = -1
     for i = 0, MAX_PLAYERS - 1 do
