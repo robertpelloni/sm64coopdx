@@ -37,6 +37,27 @@ function abilities_on_mario_update(m)
             end
         end
     end
+
+    -- Mid-Air Double Jump
+    local sTable = gPlayerSyncTable[m.playerIndex]
+    if (m.action & ACT_FLAG_AIR) == 0 then
+        sTable.has_double_jumped = false
+    else
+        -- We are in the air
+        if (m.action == ACT_FREEFALL or m.action == ACT_JUMP or m.action == ACT_DOUBLE_JUMP) then
+            if not sTable.has_double_jumped and (m.controller.buttonPressed & A_BUTTON) ~= 0 then
+                m.vel.y = 50.0
+                set_mario_action(m, ACT_DOUBLE_JUMP, 0)
+                play_sound(SOUND_MARIO_YAHOO, m.marioObj.header.gfx.cameraToObject)
+                sTable.has_double_jumped = true
+
+                -- Update Quest
+                if _G.Quest then
+                    Quest.update_progress(m, "acrobat_training", 1)
+                end
+            end
+        end
+    end
 end
 
 hook_event(HOOK_BEFORE_MARIO_UPDATE, abilities_on_mario_update)

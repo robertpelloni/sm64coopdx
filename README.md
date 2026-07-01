@@ -43,6 +43,7 @@ This project transforms SM64 into an MMORPG with persistent inventory, quests, g
 
 ### Movement Abilities
 *   **Double Jump**: Press `A` right after landing from a first jump.
+*   **Mid-Air Double Jump**: Press `A` while in the air to perform a second jump.
 *   **Ground Pound**: Press `Z` in the air to slam down.
 *   **Ground Pound Jump**: Press `A` as you land from a Ground Pound to jump high.
 *   **Long Jump**: While running, press `Z` then `A` to cover long distances. Scales with agility.

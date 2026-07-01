@@ -16,6 +16,13 @@ Quest.register("warrior_initiation", {
     reward = {item = "coin_bag", amount = 100}
 })
 
+Quest.register("acrobat_training", {
+    name = "Acrobat Training",
+    description = "Perform a Mid-Air Double Jump 5 times.",
+    target = 5,
+    reward = {item = "coin_bag", amount = 100}
+})
+
 -- Test Command
 function on_start_quest(msg)
     local m = gMarioStates[0]
