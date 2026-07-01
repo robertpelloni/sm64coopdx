@@ -20,8 +20,9 @@ local menu_items = {
     { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
     { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
     { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." },
+    { id = "config",    name = "Config",     action = function() djui_chat_message_create("Use /config [setting] [value]") end, tooltip = "Change game settings." },
     { id = "admin",     name = "Admin",      action = function() if _G.Admin then Admin.toggle_ui() end end, tooltip = "Server administration tools.", condition = function() return network_is_server() end },
-    { id = "close",     name = "Close",      action = function() UI_VISIBLE = false end, tooltip = "Close the main menu." }
+    { id = "close",     name = "Close",      action = function() UI_VISIBLE = false; set_mario_action(gMarioStates[0], ACT_IDLE, 0) end, tooltip = "Close the main menu." }
 }
 
 function main_menu_render()
@@ -54,6 +55,8 @@ function main_menu_update(m)
             SELECTION = 1
             SCROLL_OFFSET = 0
             OPEN_TIMER = 5
+        else
+            set_mario_action(m, ACT_IDLE, 0)
         end
         return
     end
@@ -89,6 +92,7 @@ function main_menu_update(m)
 
     if close then
         UI_VISIBLE = false
+        set_mario_action(m, ACT_IDLE, 0)
     end
 end
 

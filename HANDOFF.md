@@ -10,14 +10,12 @@ During this execution cycle, I reviewed all instructional materials, documentati
 **Key Architectural Observations:**
 1. **UIToolkit Multi-Mode menus**: Multi-mode layouts are common across many UIs such as Auction House and Mail.
 2. **Data Storage & Sync**: `mod_storage_save` and `mod_storage_load` are used heavily for persistency.
-3. **Class System (`mods/system_classes`)**: Syncs `sTable.classType` and utilizes `HOOK_ON_LEVEL_INIT` for initial loads to prevent desyncing.
-4. **Input Locking**: Main menus and large UI toolkits use `buttonDown` combined with `buttonPressed` to trigger correctly. They then explicitly freeze Mario using `ACT_WAITING_FOR_DIALOG`.
+3. **Input Locking**: Main menus and large UI toolkits use `buttonDown` combined with `buttonPressed` to trigger correctly. They then explicitly freeze Mario using `ACT_WAITING_FOR_DIALOG`.
 
-### Progress Achieved (v1.18)
-*   **Security Hardening**: Fortified `/ah` command, Guild Bank `request_action`, and Mail attachment processing against negative value/integer underflow exploits by strictly casting parameters via `math.floor` and checking `count <= 0`.
-*   **Data Integrity**: Applied `escape_str` globally to the Auction House serialization format to strip delimiters (`|`, `;`) from text and prevent payload corruption.
-*   **UI Inputs**: Debugged `system_menu/main.lua` to remove a flawed `buttonPressed` combination requirement, resorting back to the native `buttonDown` for modifiers so the menu opens reliably. Forced explicit player freezing `ACT_WAITING_FOR_DIALOG` while menus are open.
-*   **Documentation**: Appended findings regarding safe player locking to MEMORY.md.
+### Progress Achieved (v1.18 - Final Fixes)
+*   **Main Menu Input Freeze Fix**: Completely overhauled the Main Menu execution block to ensure Mario is properly locked into `ACT_WAITING_FOR_DIALOG` natively so he cannot run around while interacting with the menu.
+*   **Menu Restoration**: Re-implemented the `Config` menu option into the main layout array, completing the full mapping.
+*   **Security Validation**: Further tested `math.floor(tonumber())` logic for edge cases on negative values.
 
 ### Documentation Audit Notes
 During the project audit, all requested documentation files were successfully found and reviewed. This includes `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `GPT.md`, `copilot-instructions.md`, `VISION.md`, `ROADMAP_MMORPG.md`, `TODO.md`, `HANDOFF.md`, `DEPLOY.md`, `CHANGELOG.md`, `VERSION.md`, and `SUBMODULE_INVENTORY.md` (if applicable).
