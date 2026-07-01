@@ -48,12 +48,6 @@ if _G.GuildBank == nil then
     -- but we can ensure global access is ready.
 end
 
--- Helper
-local function escape_str(s)
-    if not s then return "" end
-    return string.gsub(s, "[^%w_]", "") -- Strip out all special chars and delimiters
-end
-
 -- Commands
 function on_guild_command(msg)
     local m = gMarioStates[0]
@@ -64,23 +58,14 @@ function on_guild_command(msg)
 
     if args[1] == "create" or args[1] == "join" then
         if args[2] then
-            local safeName = escape_str(args[2])
-            if safeName ~= "" then
-                sTable.guildName = safeName
-                djui_chat_message_create("Joined guild: " .. safeName)
-            else
-                djui_chat_message_create("Invalid guild name. Only alphanumeric characters allowed.")
-            end
+            sTable.guildName = args[2]
+            djui_chat_message_create("Joined guild: " .. args[2])
         else
             djui_chat_message_create("Usage: /guild join [name]")
         end
     elseif args[1] == "leave" then
         sTable.guildName = nil
         djui_chat_message_create("Left guild.")
-    elseif args[1] == nil then
-        if _G.Guilds and Guilds.toggle_ui then
-            Guilds.toggle_ui()
-        end
     else
         djui_chat_message_create("Commands: join, leave")
     end

@@ -7,13 +7,6 @@ AuctionHouse.listings = {}
 
 local SAVE_KEY = "ah_listings"
 
-local function escape_str(s)
-    if not s then return "" end
-    s = string.gsub(s, ";", ",")
-    s = string.gsub(s, "|", "/")
-    return s
-end
-
 function AuctionHouse.load()
     local data = mod_storage_load(SAVE_KEY)
     if data and data ~= "" then
@@ -36,7 +29,7 @@ end
 function AuctionHouse.save()
     local data = ""
     for _, l in ipairs(AuctionHouse.listings) do
-        data = data .. l.id .. ";" .. escape_str(l.seller) .. ";" .. l.itemId .. ";" .. l.count .. ";" .. l.price .. "|"
+        data = data .. l.id .. ";" .. l.seller .. ";" .. l.itemId .. ";" .. l.count .. ";" .. l.price .. "|"
     end
     mod_storage_save(SAVE_KEY, data)
 end
@@ -52,25 +45,15 @@ function on_ah_command(msg)
             return true
         end
         local itemId = args[2]
-        local count = math.floor(tonumber(args[3]) or 0)
-        local price = math.floor(tonumber(args[4]) or 0)
+        local count = tonumber(args[3])
+        local price = tonumber(args[4])
 
-        if not _G.Inventory or not _G.Inventory.items[itemId] then
-            djui_chat_message_create("Invalid item.")
-            return true
-        end
-
-        if count <= 0 then
+        if not count or count <= 0 then
             djui_chat_message_create("Count must be a positive number.")
             return true
         end
 
         if not price or price <= 0 then
-            djui_chat_message_create("Price must be a positive number.")
-            return true
-        end
-
-        if price <= 0 then
             djui_chat_message_create("Price must be a positive number.")
             return true
         end

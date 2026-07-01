@@ -39,23 +39,25 @@ function main_menu_render()
 
     local renderDetails = function(x, y, selItem)
         djui_hud_set_color(255, 255, 255, 255)
-        djui_hud_print_text(selItem.name, x, y, 1.2)
+        djui_hud_print_text(selItem.name, x, y, 1)
         djui_hud_set_color(200, 200, 200, 255)
-        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 25, 0.9)
+        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 220, 0.8)
     end
 
-    UIToolkit.draw_menu("MAIN MENU", visible_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Use this menu to access all game systems.")
+    UIToolkit.draw_menu("MAIN MENU", visible_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Central Hub for all your character needs.")
 end
 
 function main_menu_update(m)
     if m.playerIndex ~= 0 then return end
 
+    -- Toggle Menu
     if (m.controller.buttonDown & L_TRIG) ~= 0 and (m.controller.buttonPressed & START_BUTTON) ~= 0 then
         UI_VISIBLE = not UI_VISIBLE
         if UI_VISIBLE then
             SELECTION = 1
             SCROLL_OFFSET = 0
             OPEN_TIMER = 5
+            set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
         else
             set_mario_action(m, ACT_IDLE, 0)
         end
@@ -65,6 +67,7 @@ function main_menu_update(m)
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
+    -- Force freeze
     if m.action ~= ACT_WAITING_FOR_DIALOG then
         set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
     end

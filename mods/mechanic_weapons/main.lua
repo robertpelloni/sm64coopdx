@@ -11,14 +11,14 @@ Weapons.registry = {
         type = "slash",
         damage = 10,
         maxDurability = 100,
-        model = smlua_model_util_get_id("wooden_signpost_geo") -- placeholder model
+        model = smlua_model_util_get_id("koopa_shell_geo") -- placeholder model
     },
     ["weap_hammer"] = {
         name = "Heavy Hammer",
         type = "blunt",
         damage = 25,
         maxDurability = 50,
-        model = smlua_model_util_get_id("hammer_geo") -- placeholder model
+        model = smlua_model_util_get_id("black_bobomb_geo") -- placeholder model
     }
 }
 
