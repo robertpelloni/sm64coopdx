@@ -16,3 +16,7 @@
 
 ## Implementation: Mail & Auction House Validation
 *   Confirmed that integer underflow exploits for `/ah sell` and `/ah buy` are strictly prevented by enforcing `math.floor` casting and `< 0` rejection gates inside `mods/system_auction_house/main.lua`. Mail attachment amounts are hardcoded safely in the interface layer.
+
+## Implementation: Daily Quests
+*   Created `daily.lua` inside `system_quests` to track server-side generated daily quests.
+*   Enforced load order logic constraints when generating files alphabetically (e.g., `daily.lua` loads before `main.lua`, so global arrays like `_G.Quest` must be initialized conditionally as `_G.Quest = _G.Quest or {}` to prevent crashes).

@@ -99,3 +99,10 @@ function dungeon_level_init()
 end
 
 hook_event(HOOK_ON_LEVEL_INIT, dungeon_level_init)
+
+-- Hook into Quest System for daily completion
+function on_dungeon_complete(m)
+    if _G.Quest then
+        _G.Quest.update_progress(m, "daily_complete_dungeon", 1)
+    end
+end

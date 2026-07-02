@@ -52,3 +52,11 @@ function quest_check_coins(m)
 end
 
 hook_event(HOOK_MARIO_UPDATE, quest_check_coins)
+
+-- Hook into specific logic for Dailies
+function on_daily_enemy_defeated(m)
+    -- Hook this to whatever combat/enemy death logic we have
+    if _G.Quest then
+        _G.Quest.update_progress(m, "daily_defeat_goombas", 1)
+    end
+end

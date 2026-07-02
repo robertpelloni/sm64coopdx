@@ -1,55 +1,76 @@
--- name: System - Daily Quests
--- description: Procedurally generated daily tasks.
+-- Daily Quests Logic
+-- Automatically assigns a random set of tasks per day.
 
-_G.DailyQuests = {}
+_G.Quest = _G.Quest or {}
 
--- Daily Quest Definitions
-local daily_pool = {
-    { id = "daily_kill_goombas", type = "kill", target = "goomba", goal = 10, name = "Daily: Goomba Stomper", desc = "Defeat 10 Goombas.", rewardCoins = 100 },
-    { id = "daily_fish_bass", type = "fish", target = "fish_bass", goal = 3, name = "Daily: Big Catch", desc = "Catch 3 Big Bass.", rewardCoins = 150 },
-    { id = "daily_mine_iron", type = "mine", target = "iron_ore", goal = 5, name = "Daily: Iron Miner", desc = "Mine 5 Iron Ore.", rewardCoins = 120 }
+local DAILY_POOL = {
+    {
+        id = "daily_gather_wood",
+        name = "Daily: Lumberjack",
+        description = "Gather 5 pieces of Wood from the environment.",
+        target = 5,
+        reward = {item = "coin_silver", amount = 10}
+    },
+    {
+        id = "daily_defeat_goombas",
+        name = "Daily: Pest Control",
+        description = "Defeat 10 Goombas to keep the kingdom safe.",
+        target = 10,
+        reward = {item = "coin_silver", amount = 15}
+    },
+    {
+        id = "daily_complete_dungeon",
+        name = "Daily: Delver",
+        description = "Complete 1 Dungeon run.",
+        target = 1,
+        reward = {item = "coin_gold", amount = 1}
+    }
 }
 
--- For simplicity, we assign a random quest on login if one isn't active
-function daily_init(m)
-    if m.playerIndex ~= 0 then return end
-    if not _G.Quest then return end
+function _G.Quest.generate_dailies(m)
+    if not _G.Quest or not _G.Quest.register then return end
 
-    -- Register definitions into main Quest system
-    for _, dq in ipairs(daily_pool) do
-        if not Quest.registry[dq.id] then
-            Quest.register(dq.id, dq.name, dq.desc, dq.goal, function(player)
-                player.numCoins = player.numCoins + dq.rewardCoins
-                djui_chat_message_create("Completed " .. dq.name .. "! Reward: " .. tostring(dq.rewardCoins) .. " coins.")
-            end)
+    local today = os.date("%x")
+    local lastLoginDate = mod_storage_load("last_login_date")
+
+    if lastLoginDate ~= today then
+        -- New day! Assign a random daily quest
+        local randIndex = math.random(1, #DAILY_POOL)
+        local dailyDef = DAILY_POOL[randIndex]
+
+        -- Register it dynamically in the Quest system
+        _G.Quest.register(dailyDef.id, {
+            name = "\\#FFFF00\\" .. dailyDef.name,
+            description = dailyDef.description,
+            target = dailyDef.target,
+            reward = dailyDef.reward
+        })
+
+        -- Start the quest automatically
+        _G.Quest.start(m, dailyDef.id)
+
+        -- Save the date
+        mod_storage_save("last_login_date", today)
+        djui_chat_message_create("\\#FFFF00\\A new Daily Quest is available in your log!")
+    else
+        -- If already generated today, ensure it's still registered in memory
+        for _, def in ipairs(DAILY_POOL) do
+            _G.Quest.register(def.id, {
+                name = "\\#FFFF00\\" .. def.name,
+                description = def.description,
+                target = def.target,
+                reward = def.reward
+            })
         end
-    end
-
-    -- Assign a daily if none are active
-    local hasDaily = false
-    local active = Quest.get_active_quests(m)
-    for _, qId in ipairs(active) do
-        if string.sub(qId, 1, 6) == "daily_" then
-            hasDaily = true
-            break
-        end
-    end
-
-    if not hasDaily then
-        local randIndex = math.random(1, #daily_pool)
-        local chosen = daily_pool[randIndex]
-        Quest.assign(m, chosen.id)
-        djui_chat_message_create("New Daily Quest assigned: " .. chosen.name)
     end
 end
 
--- Hooks to track progress (Mockups for integration with other systems)
-function on_mob_killed(m, mobType)
+-- Hook into player connection to assign dailies
+local function on_daily_init(m)
     if m.playerIndex ~= 0 then return end
-    local p = Quest.get_progress(m, "daily_kill_goombas")
-    if mobType == "goomba" and p < 10 then
-        Quest.add_progress(m, "daily_kill_goombas", 1)
-    end
+    -- Hook triggers at the very end of connection initialization,
+    -- so main.lua's Quest table will be fully built by then.
+    _G.Quest.generate_dailies(m)
 end
 
-hook_event(HOOK_ON_LEVEL_INIT, daily_init)
+hook_event(HOOK_ON_PLAYER_CONNECTED, on_daily_init)
