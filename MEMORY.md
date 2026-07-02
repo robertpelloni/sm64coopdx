@@ -13,3 +13,6 @@
 *   **Waypoints System:** Created `mods/system_waypoints/` to manage fast travel discovery and dynamic boundary wrapping (`connections.lua`).
 *   **Persistence:** Discoveries are saved to `waypoints_unlocked` via `mod_storage` using proper string serialization (joining via `|`).
 *   **UI Integration:** Waypoints list correctly utilizes the `UIToolkit`, supports item debouncing, properly disables logic for undiscovered locked (`???`) locations, and is integrated directly into the `system_menu`.
+
+## Implementation: Mail & Auction House Validation
+*   Confirmed that integer underflow exploits for `/ah sell` and `/ah buy` are strictly prevented by enforcing `math.floor` casting and `< 0` rejection gates inside `mods/system_auction_house/main.lua`. Mail attachment amounts are hardcoded safely in the interface layer.
