@@ -1,180 +1,141 @@
 -- name: System - Admin
--- description: Administration tools for server hosts.
+-- description: Administration tools for server hosts using UIToolkit.
 
 _G.Admin = {}
 
 -- UI State
 local ADMIN_UI_OPEN = false
 local SELECTION = 1
+local SCROLL_OFFSET = 0
+local OPEN_TIMER = 0
 
 function admin_ui_render()
     if not ADMIN_UI_OPEN then return end
     if not network_is_server() then return end
+    if not _G.UIToolkit then return end
 
-    local w = djui_hud_get_screen_width()
-    local h = djui_hud_get_screen_height()
-    local cx = w / 2
-    local cy = h / 2
-
-    -- Background
-    djui_hud_set_color(50, 0, 0, 240)
-    djui_hud_render_rect(cx - 200, cy - 150, 400, 300)
-
-    -- Header
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("ADMIN PANEL", cx - 70, cy - 140, 1)
-
-    -- List Players
     local connectedPlayers = {}
     for i = 1, MAX_PLAYERS - 1 do
         if gNetworkPlayers[i].connected then
-            table.insert(connectedPlayers, {idx = i, name = gNetworkPlayers[i].name})
+            table.insert(connectedPlayers, {
+                idx = i,
+                name = gNetworkPlayers[i].name,
+                tooltip = "Global Index: " .. tostring(gNetworkPlayers[i].globalIndex)
+            })
         end
     end
 
     if #connectedPlayers == 0 then
-        djui_hud_print_text("No players connected.", cx - 80, cy, 1)
-        djui_hud_set_color(200, 200, 200, 255)
-        djui_hud_print_text("B: Close", cx - 30, cy + 130, 1)
-        return
+        table.insert(connectedPlayers, { name = "No players connected.", tooltip = "Wait for others to join.", idx = -1 })
     end
 
-    -- Scroll Logic
-    if SELECTION > #connectedPlayers then SELECTION = 1 end
-    if SELECTION < 1 then SELECTION = #connectedPlayers end
+    local renderDetails = function(x, y, selItem)
+        djui_hud_set_color(255, 255, 255, 255)
+        _G.UIToolkit.draw_wrapped_text(selItem.tooltip, x, y, 200, 1.0)
 
-    local y = cy - 100
-    for i, p in ipairs(connectedPlayers) do
-        if i == SELECTION then
-            djui_hud_set_color(255, 255, 0, 255)
-            djui_hud_print_text("> " .. p.name, cx - 180, y, 1)
-        else
-            djui_hud_set_color(200, 200, 200, 255)
-            djui_hud_print_text("  " .. p.name, cx - 180, y, 1)
+        if selItem.idx ~= -1 then
+             djui_hud_set_color(255, 100, 100, 255)
+             djui_hud_print_text("A: Kick  X: Ban  Y: Teleport", x, y + 40, 0.8)
         end
-        y = y + 25
     end
 
-    -- Action Hint
-    djui_hud_set_color(150, 150, 150, 255)
-    djui_hud_print_text("A: Kick  X: Ban  Y: Teleport To", cx - 100, cy + 100, 0.8)
-    djui_hud_print_text("B: Close", cx - 30, cy + 130, 1)
+    _G.UIToolkit.draw_menu("ADMIN PANEL", connectedPlayers, SELECTION, SCROLL_OFFSET, renderDetails, "A: Kick X: Ban Y: TP B: Close", "Manage connected players.")
 end
 
 function admin_ui_update(m)
     if m.playerIndex ~= 0 then return end
-    if not ADMIN_UI_OPEN then return end
+    if not ADMIN_UI_OPEN or not network_is_server() then return end
 
-    -- Lock
     if m.action ~= ACT_WAITING_FOR_DIALOG then
         set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
     end
 
-    -- Nav
     local connectedPlayers = {}
     for i = 1, MAX_PLAYERS - 1 do
         if gNetworkPlayers[i].connected then
             table.insert(connectedPlayers, {idx = i, name = gNetworkPlayers[i].name})
         end
     end
-
     if #connectedPlayers == 0 then
-        if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-            ADMIN_UI_OPEN = false
-            set_mario_action(m, ACT_IDLE, 0)
-        end
-        return
+        table.insert(connectedPlayers, { name = "No players connected.", idx = -1 })
     end
 
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        SELECTION = SELECTION + 1
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        SELECTION = SELECTION - 1
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
+    local sel, timer, act, close = _G.UIToolkit.handle_input(m, SELECTION, #connectedPlayers, OPEN_TIMER)
+    SELECTION = sel
+    OPEN_TIMER = timer
+    SCROLL_OFFSET = _G.UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #connectedPlayers)
 
-    local target = connectedPlayers[SELECTION]
-
-    -- Kick (A)
-    if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
-        if network_player_kick then
-            network_player_kick(target.idx)
-            djui_chat_message_create("Kicked " .. target.name)
-            play_sound(SOUND_OBJ_BOWSER_LAUGH, m.marioObj.header.gfx.cameraToObject)
-        else
-            djui_chat_message_create("Error: Kick function not available.")
+    if act then
+        local p = connectedPlayers[SELECTION]
+        if p and p.idx ~= -1 then
+             network_player_kick(p.idx)
+             djui_chat_message_create("Kicked player " .. p.name)
+             play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         end
     end
 
-    -- Ban (X)
     if (m.controller.buttonPressed & X_BUTTON) ~= 0 then
-        if network_player_ban then
-            network_player_ban(target.idx)
-            djui_chat_message_create("Banned " .. target.name)
-            play_sound(SOUND_OBJ_BOWSER_LAUGH, m.marioObj.header.gfx.cameraToObject)
-        else
-            -- If ban function missing, just kick
-            if network_player_kick then
-                network_player_kick(target.idx)
-                djui_chat_message_create("Kicked (Ban not avail) " .. target.name)
-            end
+        local p = connectedPlayers[SELECTION]
+        if p and p.idx ~= -1 then
+             if network_player_ban then network_player_ban(p.idx) else network_player_kick(p.idx) end
+             djui_chat_message_create("Banned player " .. p.name)
+             play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
         end
     end
 
-    -- Teleport To (Y)
     if (m.controller.buttonPressed & Y_BUTTON) ~= 0 then
-        local tm = gMarioStates[target.idx]
-        m.pos.x = tm.pos.x
-        m.pos.y = tm.pos.y
-        m.pos.z = tm.pos.z
-        djui_chat_message_create("Teleported to " .. target.name)
-        play_sound(SOUND_MENU_TELEPORT, m.marioObj.header.gfx.cameraToObject)
-        ADMIN_UI_OPEN = false
-        set_mario_action(m, ACT_IDLE, 0)
+        local p = connectedPlayers[SELECTION]
+        if p and p.idx ~= -1 then
+             local tm = gMarioStates[p.idx]
+             m.pos.x = tm.pos.x
+             m.pos.y = tm.pos.y
+             m.pos.z = tm.pos.z
+             djui_chat_message_create("Teleported to " .. p.name)
+             play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
+        end
     end
 
-    -- Close (B)
-    if (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+    if close then
         ADMIN_UI_OPEN = false
         set_mario_action(m, ACT_IDLE, 0)
     end
 end
 
 function Admin.toggle_ui()
-    if not network_is_server() then
-        djui_chat_message_create("Only the host can access Admin Panel.")
-        return
-    end
+    if not network_is_server() then return end
     ADMIN_UI_OPEN = not ADMIN_UI_OPEN
-    SELECTION = 1
+    if ADMIN_UI_OPEN then
+        SELECTION = 1
+        SCROLL_OFFSET = 0
+        OPEN_TIMER = 5
+        set_mario_action(gMarioStates[0], ACT_WAITING_FOR_DIALOG, 0)
+    else
+        set_mario_action(gMarioStates[0], ACT_IDLE, 0)
+    end
 end
 
-hook_event(HOOK_ON_HUD_RENDER, admin_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, admin_ui_update)
-
--- Commands
 function on_admin_command(msg)
-    if not network_is_server() then return false end
+    if not network_is_server() then
+        djui_chat_message_create("Only the host can use admin commands.")
+        return true
+    end
 
     local args = {}
-    for word in msg:gmatch("%S+") do table.insert(args, word) end
+    for w in string.gmatch(msg, "%S+") do table.insert(args, w) end
 
-    local cmd = args[1]
-    local targetName = args[2]
-
-    if cmd == "ui" then
+    if args[1] == "ui" or not args[1] then
         Admin.toggle_ui()
         return true
     end
 
+    local cmd = args[1]
+    local targetName = args[2]
+
     if not targetName then
-        djui_chat_message_create("Usage: /admin [kick|ban|tp] [name]")
+        djui_chat_message_create("Usage: /admin [ui|kick|ban|tp] [name]")
         return true
     end
 
-    -- Find Target
     local targetIdx = -1
     for i = 1, MAX_PLAYERS - 1 do
         if gNetworkPlayers[i].connected and gNetworkPlayers[i].name == targetName then
@@ -206,3 +167,5 @@ function on_admin_command(msg)
 end
 
 hook_chat_command("admin", "Admin tools", on_admin_command)
+hook_event(HOOK_ON_HUD_RENDER, admin_ui_render)
+hook_event(HOOK_BEFORE_MARIO_UPDATE, admin_ui_update)
