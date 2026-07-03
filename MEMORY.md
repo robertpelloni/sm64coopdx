@@ -20,3 +20,6 @@
 ## Implementation: Daily Quests
 *   Created `daily.lua` inside `system_quests` to track server-side generated daily quests.
 *   Enforced load order logic constraints when generating files alphabetically (e.g., `daily.lua` loads before `main.lua`, so global arrays like `_G.Quest` must be initialized conditionally as `_G.Quest = _G.Quest or {}` to prevent crashes).
+
+## Implementation: Movement Abilities
+*   Verified that Spyro Glide (`mods/mechanic_glide`), Sonic Boost (`mods/mechanic_boost`), and FLUDD (`mods/mechanic_fludd`) are already correctly implemented and listed in the `README.md` under Movement Abilities.
