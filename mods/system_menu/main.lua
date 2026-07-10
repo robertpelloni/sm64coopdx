@@ -18,23 +18,34 @@ local menu_items = {
     { id = "party",     name = "Party",      action = function() if _G.Party then Party.toggle_ui() end end, tooltip = "Manage your current party." },
     { id = "stats",     name = "Stats",      action = function() if _G.Progression then Progression.toggle_ui() end end, tooltip = "View your level and attributes." },
     { id = "achievements", name = "Achievements", action = function() if _G.Achievements then Achievements.toggle_ui() end end, tooltip = "View your unlocked milestones." },
+    { id = "dungeons",  name = "Dungeons",   action = function() if _G.DungeonUI then DungeonUI.toggle_ui() end end, tooltip = "Enter instanced dungeon encounters." },
+    { id = "waypoints", name = "Fast Travel",action = function() if _G.Waypoints then Waypoints.toggle_ui() end end, tooltip = "Teleport to discovered Waypoints." },
     { id = "mail",      name = "Mailbox",    action = function() if _G.Mail then Mail.toggle_ui() end end, tooltip = "Check your messages and packages." },
     { id = "help",      name = "Help / Guide",action = function() if _G.SystemHelp then SystemHelp.toggle_ui() end end, tooltip = "Comprehensive Game Manual and Info." },
-    { id = "waypoints", name = "Waypoints",  action = function() if _G.WaypointsUI then WaypointsUI.toggle() end end, tooltip = "Fast travel to unlocked locations." },
+    { id = "config",    name = "Config",     action = function() djui_chat_message_create("Use /config [setting] [value]") end, tooltip = "Change game settings." },
+    { id = "admin",     name = "Admin",      action = function() if _G.Admin then Admin.toggle_ui() end end, tooltip = "Server administration tools.", condition = function() return network_is_server() end },
+    { id = "close",     name = "Close",      action = function() UI_VISIBLE = false; set_mario_action(gMarioStates[0], ACT_IDLE, 0) end, tooltip = "Close the main menu." }
 }
 
 function main_menu_render()
     if not UI_VISIBLE then return end
     if not _G.UIToolkit then return end
 
+    local visible_items = {}
+    for _, item in ipairs(menu_items) do
+        if not item.condition or item.condition() then
+            table.insert(visible_items, item)
+        end
+    end
+
     local renderDetails = function(x, y, selItem)
         djui_hud_set_color(255, 255, 255, 255)
         djui_hud_print_text(selItem.name, x, y, 1)
         djui_hud_set_color(200, 200, 200, 255)
-        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 22, 0.8)
+        UIToolkit.draw_wrapped_text(selItem.tooltip, x, y + 40, 220, 0.8)
     end
 
-    UIToolkit.draw_menu("MAIN MENU", menu_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Central Hub for all your character needs.")
+    UIToolkit.draw_menu("MAIN MENU", visible_items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Select  B: Close", "Central Hub for all your character needs.")
 end
 
 function main_menu_update(m)
@@ -61,14 +72,21 @@ function main_menu_update(m)
         set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
     end
 
-    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #menu_items, OPEN_TIMER)
+    local visible_items = {}
+    for _, item in ipairs(menu_items) do
+        if not item.condition or item.condition() then
+            table.insert(visible_items, item)
+        end
+    end
+
+    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, #visible_items, OPEN_TIMER)
     SELECTION = sel
     OPEN_TIMER = timer
-    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #menu_items)
+    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, #visible_items)
 
     if act then
         play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-        local item = menu_items[SELECTION]
+        local item = visible_items[SELECTION]
         if item and item.action then
             UI_VISIBLE = false
             set_mario_action(m, ACT_IDLE, 0)

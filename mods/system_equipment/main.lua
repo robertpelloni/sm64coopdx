@@ -3,10 +3,73 @@
 
 _G.Equipment = {}
 
-local UI_VISIBLE = false
-local SELECTION = 1
-local SCROLL_OFFSET = 0
-local OPEN_TIMER = 0
+local m = gMarioStates[0]
+
+-- Equipment Manager Core API
+
+function Equipment.get_equipped_weapon()
+    local s = gPlayerSyncTable[0]
+    return s.equipped_weapon or "none"
+end
+
+function Equipment.get_equipped_badge(slot)
+    local s = gPlayerSyncTable[0]
+    local key = "eq_badge_" .. tostring(slot)
+    return s[key] or "none"
+end
+
+function Equipment.equip_item(itemId, type, slot)
+    local s = gPlayerSyncTable[0]
+    if not _G.Inventory or _G.Inventory.get_item_count(m, itemId) <= 0 then
+        return false, "You do not own this item."
+    end
+
+    if type == "weapon" then
+        if s.equipped_weapon and s.equipped_weapon ~= "none" then
+            Equipment.unequip_item("weapon", 1)
+        end
+        _G.Inventory.remove_item(m, itemId, 1)
+        s.equipped_weapon = itemId
+        return true, "Weapon equipped."
+    elseif type == "badge" then
+        local key = "eq_badge_" .. tostring(slot)
+        if s[key] and s[key] ~= "none" then
+            Equipment.unequip_item("badge", slot)
+        end
+        _G.Inventory.remove_item(m, itemId, 1)
+        s[key] = itemId
+        return true, "Badge equipped."
+    end
+
+    return false, "Invalid equipment type."
+end
+
+function Equipment.unequip_item(type, slot)
+    local s = gPlayerSyncTable[0]
+    if type == "weapon" then
+        if s.equipped_weapon and s.equipped_weapon ~= "none" then
+            _G.Inventory.add_item(m, s.equipped_weapon, 1)
+            s.equipped_weapon = "none"
+            return true, "Weapon unequipped."
+        end
+    elseif type == "badge" then
+        local key = "eq_badge_" .. tostring(slot)
+        if s[key] and s[key] ~= "none" then
+            _G.Inventory.add_item(m, s[key], 1)
+            s[key] = "none"
+            return true, "Badge unequipped."
+        end
+    end
+    return false, "Nothing to unequip."
+end
+
+function Equipment.toggle_ui()
+    if _G.EquipmentUI then
+        _G.EquipmentUI.toggle()
+    else
+        djui_chat_message_create("Equipment UI not loaded.")
+    end
+end
 
 function equipment_ui_render()
     if not UI_VISIBLE then return end
@@ -63,51 +126,3 @@ function equipment_ui_render()
 
     UIToolkit.draw_menu("EQUIPMENT", items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Unequip  B: Close", "Manage your active weapons and badges.")
 end
-
-function equipment_ui_update(m)
-    if m.playerIndex ~= 0 then return end
-    if not UI_VISIBLE then return end
-    if not _G.UIToolkit then return end
-
-    local maxItems = 4 -- 1 weapon, 3 badges
-    local sel, timer, act, close = UIToolkit.handle_input(m, SELECTION, maxItems, OPEN_TIMER)
-    SELECTION = sel
-    OPEN_TIMER = timer
-    SCROLL_OFFSET = UIToolkit.calculate_scroll(SELECTION, SCROLL_OFFSET, maxItems)
-
-    if act then
-        -- Unequip logic based on selection index
-        if SELECTION == 1 then
-            if gPlayerSyncTable[0].equipped_weapon then
-                djui_chat_message_create("Unequipped " .. gPlayerSyncTable[0].equipped_weapon)
-                gPlayerSyncTable[0].equipped_weapon = nil
-                gPlayerSyncTable[0].weapon_durability = 0
-                play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-            end
-        elseif SELECTION >= 2 and SELECTION <= 4 then
-            local badgeIdx = SELECTION - 1
-            local badgeId = gPlayerSyncTable[0]["eq_badge_" .. badgeIdx]
-            if badgeId then
-                djui_chat_message_create("Unequipped " .. badgeId)
-                gPlayerSyncTable[0]["eq_badge_" .. badgeIdx] = nil
-                play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
-            end
-        end
-    end
-
-    if close then
-        UI_VISIBLE = false
-    end
-end
-
-function Equipment.toggle_ui()
-    UI_VISIBLE = not UI_VISIBLE
-    if UI_VISIBLE then
-        SELECTION = 1
-        SCROLL_OFFSET = 0
-        OPEN_TIMER = 5
-    end
-end
-
-hook_event(HOOK_ON_HUD_RENDER, equipment_ui_render)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, equipment_ui_update)
