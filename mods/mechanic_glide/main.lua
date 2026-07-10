@@ -116,3 +116,12 @@ end
 
 hook_event(HOOK_BEFORE_MARIO_UPDATE, mario_before_phys_step)
 hook_mario_action(ACT_GLIDE, act_glide)
+
+-- Interrupt glide if taking knockback/damage
+local function on_mario_action(m)
+    if m.playerIndex ~= 0 then return end
+    if get_glide_state(m) and (m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB or m.action == ACT_HARD_BACKWARD_AIR_KB or m.action == ACT_HARD_FORWARD_AIR_KB) then
+        set_glide_state(m, false)
+    end
+end
+hook_event(HOOK_ON_SET_MARIO_ACTION, on_mario_action)

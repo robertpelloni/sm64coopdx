@@ -49,8 +49,8 @@ Universal Inventory, Guilds, Parties, Trading, Mail, Housing, Fishing, Mining, C
 1.  **Dungeons:** Crypt of the Vanished (Complete).
 2.  **Raids:** King Whomp (Complete).
 3.  **Endless Modes:** Tower of Trials (Complete).
-4.  **Daily Quests:** **Pending.**
-5.  **Equipment Manager UI:** **Pending.**
+4.  **Daily Quests:** **Complete.**
+5.  **Equipment Manager UI:** **Complete.**
 
 ## Summary
 The project is structurally robust and feature-rich. Immediate next steps involve refining UI hookups like text input for the Auction House and Mail attachments. Guild Banks are now operational.

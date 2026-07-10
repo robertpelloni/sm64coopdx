@@ -60,7 +60,7 @@ function Trade.update_offer(coins, items)
     if sTable.tradeStatus ~= Trade.STATE_TRADING and sTable.tradeStatus ~= Trade.STATE_CONFIRMED then return end
 
     -- Validate coins against actual inventory
-    local actualCoins = Inventory.get_count(m, "coin_bag")
+    local actualCoins = Inventory.get_item_count(m, "coin_bag")
     if coins > actualCoins then
         coins = actualCoins
     end

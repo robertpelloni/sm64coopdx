@@ -7,6 +7,14 @@ Inventory.items = {}
 -- Load/Save mechanics
 local SAVE_KEY = "player_inventory"
 
+function escape_str(s)
+    if not s then return "" end
+    s = string.gsub(s, ";", ",")
+    s = string.gsub(s, "|", "/")
+    s = string.gsub(s, ":", "-")
+    return s
+end
+
 function Inventory.define_item(id, name, description, value)
     Inventory.items[id] = {
         id = id,
@@ -18,15 +26,26 @@ end
 
 function Inventory.add_item(m, itemId, count)
     if m.playerIndex ~= 0 then return end
+
+    local c = math.floor(tonumber(count) or 0)
+    if c <= 0 then return end
+
     local current = gPlayerSyncTable[0]["inv_" .. itemId] or 0
-    gPlayerSyncTable[0]["inv_" .. itemId] = current + count
+    gPlayerSyncTable[0]["inv_" .. itemId] = current + c
+
+    if _G.SafeSave then SafeSave("Inventory") end
 end
 
 function Inventory.remove_item(m, itemId, count)
     if m.playerIndex ~= 0 then return end
+
+    local c = math.floor(tonumber(count) or 0)
+    if c <= 0 then return false end
+
     local current = gPlayerSyncTable[0]["inv_" .. itemId] or 0
-    if current >= count then
-        gPlayerSyncTable[0]["inv_" .. itemId] = current - count
+    if current >= c then
+        gPlayerSyncTable[0]["inv_" .. itemId] = current - c
+        if _G.SafeSave then SafeSave("Inventory") end
         return true
     end
     return false
@@ -54,7 +73,7 @@ function Inventory.save()
     local data = ""
     local items = Inventory.get_all_items(m)
     for _, item in ipairs(items) do
-        data = data .. item.id .. ":" .. tostring(item.count) .. ";"
+        data = data .. escape_str(item.id) .. ":" .. tostring(item.count) .. ";"
     end
     mod_storage_save(SAVE_KEY, data)
 end
@@ -97,7 +116,6 @@ function economy_update(m)
         _G.INVENTORY_LOADED = true
         lastCoinCount = m.numCoins
     end
-
 
     if m.numCoins > lastCoinCount then
         local diff = m.numCoins - lastCoinCount

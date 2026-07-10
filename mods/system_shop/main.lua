@@ -1,20 +1,17 @@
--- name: System - Shop and NPCs
--- description: Shopkeeper NPC using UIToolkit
+-- name: System - Shop
+-- description: NPC Shops for purchasing items and managing economy.
+-- depends: system_ui
+-- depends: system_inventory
+-- depends: system_reputation
 
 _G.Shop = {}
 
--- NPC definition
-E_MODEL_TOAD_PLAYER = smlua_model_util_get_id("toad_player_geo")
--- E_MODEL_TOAD_PLAYER = 114 -- temp fallback if needed
-
--- Shop UI State
 local UI_VISIBLE = false
 local SELECTION = 1
 local SCROLL_OFFSET = 0
 local OPEN_TIMER = 0
 local CURRENT_SHOP = nil
 
--- Define Shops
 Shop.registry = {
     ["general"] = {
         name = "General Store",
@@ -58,32 +55,6 @@ function shop_ui_render()
             tooltip = tooltip .. " (Req: " .. item.reqRep.faction .. " rep " .. tostring(item.reqRep.level) .. ")"
         end
 
-<<<<<<< HEAD
-    -- Background
-    djui_hud_set_color(0, 0, 0, 220)
-    djui_hud_render_rect(cx - 200, cy - 150, 400, 300)
-
-    -- Title
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_print_text("SHOP", cx - 40, cy - 140, 1)
-
-    -- Coins
-    local coins = Inventory.get_count(gMarioStates[0], "coin_bag")
-    djui_hud_set_color(255, 215, 0, 255)
-    djui_hud_print_text("Coins: " .. coins, cx - 180, cy - 140, 1)
-
-    -- Items List
-    local listX = cx - 180
-    local listY = cy - 100
-
-    local startIdx = 1
-    if SELECTION > 5 then startIdx = SELECTION - 4 end
-
-    local visibleCount = 0
-    for i = startIdx, math.min(startIdx + 8, #SHOP_ITEMS) do
-        local itemData = SHOP_ITEMS[i]
-        local def = _G.Inventory.items[itemData.id]
-=======
         table.insert(items, {
             id = item.id,
             name = name,
@@ -96,70 +67,10 @@ function shop_ui_render()
 
     local renderDetails = function(x, y, selItem)
         local def = _G.Inventory and _G.Inventory.items[selItem.id]
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
         if def then
             djui_hud_set_color(0, 255, 255, 255)
             djui_hud_print_text(def.name, x, y, 1)
 
-<<<<<<< HEAD
-            if i == SELECTION then
-                djui_hud_set_color(0, 255, 0, 255)
-                djui_hud_print_text("> " .. name .. " (" .. price .. ")", listX, listY + visibleCount*25, 1)
-            else
-                djui_hud_set_color(200, 200, 200, 255)
-                djui_hud_print_text("  " .. name .. " (" .. price .. ")", listX, listY + visibleCount*25, 1)
-            end
-            visibleCount = visibleCount + 1
-        end
-    end
-
-    -- Separator
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_render_rect(cx, cy - 110, 2, 220)
-
-    -- Details Pane
-    local selItemData = SHOP_ITEMS[SELECTION]
-    if selItemData then
-        local def = _G.Inventory.items[selItemData.id]
-        if def then
-            local detX = cx + 20
-            local detY = cy - 100
-
-            djui_hud_set_color(0, 255, 255, 255)
-            djui_hud_print_text(def.name, detX, detY, 1)
-
-            djui_hud_set_color(255, 215, 0, 255)
-            djui_hud_print_text("Price: " .. selItemData.price, detX, detY + 25, 1)
-
-            -- Description
-            djui_hud_set_color(200, 200, 200, 255)
-            local desc = def.description or "No description."
-
-            local words = {}
-            for word in string.gmatch(desc, "%S+") do table.insert(words, word) end
-
-            local line = ""
-            local lineY = detY + 60
-            local maxLen = 22
-
-            for _, word in ipairs(words) do
-                if string.len(line) + string.len(word) > maxLen then
-                    djui_hud_print_text(line, detX, lineY, 0.8)
-                    lineY = lineY + 20
-                    line = word .. " "
-                else
-                    line = line .. word .. " "
-                end
-            end
-            if line ~= "" then
-                 djui_hud_print_text(line, detX, lineY, 0.8)
-            end
-        end
-    end
-
-    djui_hud_set_color(200, 200, 200, 255)
-    djui_hud_print_text("A: Buy  B: Exit", cx - 60, cy + 130, 1)
-=======
             djui_hud_set_color(200, 200, 200, 255)
             local desc = def.description or "No description."
             UIToolkit.draw_wrapped_text(desc, x, y + 40, 22, 0.8)
@@ -175,7 +86,6 @@ function shop_ui_render()
     end
 
     UIToolkit.draw_menu(CURRENT_SHOP.name, items, SELECTION, SCROLL_OFFSET, renderDetails, "A: Buy  B: Close", "Purchase items and equipment with your coins here.")
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
 end
 
 function shop_ui_update(m)
@@ -216,17 +126,6 @@ function shop_ui_update(m)
        end
     end
 
-<<<<<<< HEAD
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        SELECTION = SELECTION + 1
-        if SELECTION > #SHOP_ITEMS then SELECTION = 1 end
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-    end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-        SELECTION = SELECTION - 1
-        if SELECTION < 1 then SELECTION = #SHOP_ITEMS end
-        play_sound(SOUND_MENU_CHANGE_SELECT, m.marioObj.header.gfx.cameraToObject)
-=======
     if close then
         UI_VISIBLE = false
         CURRENT_SHOP = nil
@@ -249,7 +148,6 @@ function bhv_shopkeeper_init(obj)
         obj.oShopId = "toad_faction"
     else
         obj.oShopId = "general"
->>>>>>> origin/mmorpg-ui-overhaul-cleanup-11766433690423634407
     end
 end
 

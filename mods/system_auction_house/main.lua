@@ -45,16 +45,16 @@ function on_ah_command(msg)
             return true
         end
         local itemId = args[2]
-        local count = tonumber(args[3])
-        local price = tonumber(args[4])
+        local count = math.floor(tonumber(args[3]) or 0)
+        local price = math.floor(tonumber(args[4]) or 0)
 
         if not count or count <= 0 then
-            djui_chat_message_create("Count must be a positive number.")
+            djui_chat_message_create("Count must be a positive integer.")
             return true
         end
 
         if not price or price <= 0 then
-            djui_chat_message_create("Price must be a positive number.")
+            djui_chat_message_create("Price must be a positive integer.")
             return true
         end
 
