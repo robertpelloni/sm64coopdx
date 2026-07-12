@@ -19,9 +19,9 @@ function inventory_ui_render()
         local def = _G.Inventory.items[item.id]
         table.insert(items, {
             id = item.id,
-            name = item.name or item.id,
+            name = def and def.name or item.id,
             right_text = "x" .. tostring(item.count),
-            tooltip = def and (def.name .. " (Value: " .. tostring(def.value) .. ")") or "Unknown item."
+            tooltip = def and def.description or "No description."
         })
     end
 
@@ -76,10 +76,14 @@ function inventory_ui_update(m)
     if act and #raw_items > 0 then
        play_sound(SOUND_MENU_CLICK_FILE_SELECT, m.marioObj.header.gfx.cameraToObject)
        local selItem = raw_items[SELECTION]
-       if selItem then
+       if selItem and selItem.id ~= "none" then
            if string.match(selItem.id, "^weap_") then
-               if _G.Weapons then
-                   Weapons.equip(m, selItem.id)
+               if _G.Equipment then
+                   _G.Equipment.equip_item(selItem.id, "weapon", 1)
+               end
+           elseif string.match(selItem.id, "^badge_") then
+               if _G.Equipment then
+                   _G.Equipment.equip_item(selItem.id, "badge", 1)
                end
            elseif string.match(selItem.id, "^badge_") then
                -- Simple logic: equip in first empty slot, or replace slot 1
