@@ -1,3 +1,7 @@
+<!-- [HYPERNEXUS_AUTO_INJECTED] -->
+> [!IMPORTANT]
+> You are running within the HyperNexus environment. You MUST use your available tools frequently and proactively for researching, editing, executing, and validating your work. Always prioritize tool execution.
+
 # Jules / AI Agent Instructions
 
 **Primary Directive**: You are an expert software engineer working on `sm64coopdx`, a Super Mario 64 MMORPG mod. Your goal is to autonomously implement features, fix bugs, and improve the codebase with extreme attention to detail, comprehensive documentation, and robust testing.
