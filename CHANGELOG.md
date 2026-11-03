@@ -1,6 +1,11 @@
 # Changelog
 
-## v1.16 (Current)
+## v1.17 (Current)
+- **Consolidated Dashboard UI**: Completely redesigned `mods/system_menu/main.lua` into a high-value single-page MMO Dashboard. Grouped items cleanly into Character, Economy, Adventure, and System domains with rich tooltip descriptions and intuitive controls.
+- **Server Tray & Supervisor**: Added `developer/server_tray.py` providing a desktop system tray icon (with Start/Stop/Restart/Quit actions) and an automated headless/CLI fallback for server process management and log monitoring.
+- **Documentation & Governance**: Updated `DASHBOARD.md`, `DEPLOY.md`, `TODO.md`, `HANDOFF.md`, and version injection to `v1.17`.
+
+## v1.16
 - **Party UI**: Added a comprehensive visual menu for managing parties (create, join, invite, leave) directly tied into `UIToolkit`.
 
 ## v1.15
