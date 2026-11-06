@@ -40,9 +40,12 @@ Universal Inventory, Guilds, Parties, Trading, Mail, Housing, Fishing, Mining, C
 *Status: **Active / In Progress**.*
 1.  **Headless Server:** **Complete.** C engine supports `--headless`.
 2.  **Anti-Cheat:** **Complete.** Server-side validation, rubber-banding, and auto-kicks.
-3.  **UI Standardization:** **Complete.** Centralized `UIToolkit` manages all menus with comprehensive tooltips.
+3.  **UI Standardization:** **Complete.** Centralized `UIToolkit` manages all menus with comprehensive tooltips and unified Dashboard.
 4.  **Database/Persistence:** **Active.** Utilizing `mod_storage` with string sanitization. Needs optimization for scale.
-5.  **Dedicated Server Rewrite:** **Pending.** Deep C engine refactor to support thousands of concurrent players cleanly.
+5.  **Network Architecture & High Concurrency Optimization:** **Active.**
+    - **Adaptive Packet Compression:** Currently `packet_compress` (`src/pc/network/packets/packet.c`) utilizes `compress2` with `Z_BEST_COMPRESSION` unconditionally on all packets. For small and high-frequency packets (e.g. movement, heartbeats, sync packets < 64 bytes), compression adds CPU latency without size savings. Switching to `Z_BEST_SPEED` or threshold-gated compression drastically reduces server CPU load under high player counts.
+    - **Server-Side Spatial Interest Filtering:** Currently `network_send_broadcast` (`src/pc/network/network.c`) iterates all connected players and sends packets matching coarse level/area filters. Extending this to spatial distance culling and instance domain tagging will prevent transmitting unnecessary entity sync packets to distant players, minimizing bandwidth and socket buffer saturation.
+6.  **Dedicated Server Rewrite:** **Pending.** Deep C engine refactor to support thousands of concurrent players cleanly.
 
 ### Phase 4: Content Depth
 *Status: **Active**.*

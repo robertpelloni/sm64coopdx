@@ -3,6 +3,8 @@
 SM64CoopDX is a massive multiplayer online modification for Super Mario 64. To move from "Multiplayer Mod" to "Autonomous 3D Platformer Metaverse," here are several innovative ideas:
 
 ## 1. Architectural & Language Perspectives
+*   **Adaptive Packet Compression & Delta Encoding:** Replace unconditional `Z_BEST_COMPRESSION` in `packet.c` with adaptive compression levels. Skip compression entirely on sub-64-byte payloads where deflate adds frame latency and packet overhead, and utilize `Z_BEST_SPEED` (level 1) for bulk high-frequency packets (e.g. continuous player movement updates).
+*   **Server-Side Spatial Interest Filtering:** Integrate 3D Euclidean grid cells or radial proximity checks into `network_send_broadcast` in `network.c`. Currently, players on the same course broadcast to every player in that course. Radial culling avoids forwarding visual and animation packets to players outside render range, dramatically lowering socket saturation.
 *   **The "Zero-Latency" Netcode (Rust Bridge):** Port the core "Party & Guild" synchronization logic to **Rust**. Standard SM64 netcode can be jittery with 24+ players; a high-performance Rust backend handling the state machine would allow for true "MMORPG-level" player counts (100+) without desync.
 *   **WASM-Based "Cross-Console" Play:** Implement a **WASM-version of the CoopDX engine**. This would allow players to join the MMORPG server directly from a **bobzilla/bobium** browser window, with the AI-native browser handling the timings and 3D rendering.
 
