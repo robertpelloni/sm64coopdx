@@ -1,6 +1,7 @@
 # Changelog
 
 ## v1.17 (Current)
+- **Network Performance**: Added adaptive packet compression to `src/pc/network/packets/packet.c`. Automatically selects `Z_BEST_SPEED` for high-frequency player movement packets (`PACKET_PLAYER`), significantly reducing CPU compression latency under concurrent multiplayer loads while retaining full decompression compatibility.
 - **Consolidated Dashboard UI**: Completely redesigned `mods/system_menu/main.lua` into a high-value single-page MMO Dashboard. Grouped items cleanly into Character, Economy, Adventure, and System domains with rich tooltip descriptions and intuitive controls.
 - **Server Tray & Supervisor**: Added `developer/server_tray.py` providing a desktop system tray icon (with Start/Stop/Restart/Quit actions) and an automated headless/CLI fallback for server process management and log monitoring.
 - **Documentation & Governance**: Updated `DASHBOARD.md`, `DEPLOY.md`, `TODO.md`, `HANDOFF.md`, and version injection to `v1.17`.
