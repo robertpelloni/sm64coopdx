@@ -21,7 +21,17 @@ void packet_compress(struct Packet* p, u8** compBuffer, u32* compSize) {
     uLongf compressedLen = compressBound(sourceSize);
     increase_comp_buffer(PACKET_LENGTH);
 
-    if (sCompBuffer && compress2((Bytef*)sCompBuffer, &compressedLen, (Bytef*)p->buffer, sourceSize, Z_BEST_COMPRESSION) == Z_OK) {
+    // Adaptive compression level:
+    // High-frequency movement packets (PACKET_PLAYER) sent continuously (30Hz per client)
+    // achieve comparable compression ratio with Z_BEST_SPEED (level 1) while cutting CPU
+    // deflate compression latency significantly compared to Z_BEST_COMPRESSION (level 9).
+    // Bulk asset downloads or mod files retain Z_BEST_COMPRESSION.
+    int compressionLevel = Z_BEST_COMPRESSION;
+    if (p->packetType == PACKET_PLAYER) {
+        compressionLevel = Z_BEST_SPEED;
+    }
+
+    if (sCompBuffer && compress2((Bytef*)sCompBuffer, &compressedLen, (Bytef*)p->buffer, sourceSize, compressionLevel) == Z_OK) {
         *compBuffer = sCompBuffer;
         *compSize = compressedLen;
     } else {

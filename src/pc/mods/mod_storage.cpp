@@ -200,7 +200,6 @@ C_FIELD bool mod_storage_save(const char* key, const char* value) {
     ini["storage"][key] = value;
 
     mINI::INIFile file(filename);
-    file.write(ini);
     file.generate(ini);
 
     return true;
@@ -230,7 +229,6 @@ C_FIELD bool mod_storage_remove(const char* key) {
 
     if (ini["storage"].remove(key)) {
         mINI::INIFile file(filename);
-        file.write(ini);
         file.generate(ini);
         return true;
     }
@@ -250,7 +248,6 @@ C_FIELD bool mod_storage_clear(void) {
     ini["storage"].clear();
 
     mINI::INIFile file(filename);
-    file.write(ini);
     file.generate(ini);
 
     return true;
