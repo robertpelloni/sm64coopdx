@@ -41,7 +41,7 @@ Universal Inventory, Guilds, Parties, Trading, Mail, Housing, Fishing, Mining, C
 1.  **Headless Server:** **Complete.** C engine supports `--headless`.
 2.  **Anti-Cheat:** **Complete.** Server-side validation, rubber-banding, and auto-kicks.
 3.  **UI Standardization:** **Complete.** Centralized `UIToolkit` manages all menus with comprehensive tooltips and unified Dashboard.
-4.  **Database/Persistence:** **Active.** Utilizing `mod_storage` with string sanitization. Needs optimization for scale.
+4.  **Database/Persistence:** **Active.** Utilizing `mod_storage` with string sanitization, `SaveManager` batching, and optimized C++ INI generation (halved disk serialization overhead).
 5.  **Network Architecture & High Concurrency Optimization:** **Active.**
     - **Adaptive Packet Compression:** **Implemented.** `packet_compress` (`src/pc/network/packets/packet.c`) automatically adapts compression level (`Z_BEST_SPEED` on high-rate `PACKET_PLAYER` and `Z_BEST_COMPRESSION` on assets/mod files), drastically reducing server CPU deflate overhead.
     - **Server-Side Spatial Interest Filtering:** Currently `network_send_broadcast` (`src/pc/network/network.c`) iterates all connected players and sends packets matching coarse level/area filters. Extending this to spatial distance culling and instance domain tagging will prevent transmitting unnecessary entity sync packets to distant players, minimizing bandwidth and socket buffer saturation.
