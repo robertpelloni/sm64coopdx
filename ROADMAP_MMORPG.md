@@ -44,7 +44,7 @@ Universal Inventory, Guilds, Parties, Trading, Mail, Housing, Fishing, Mining, C
 4.  **Database/Persistence:** **Active.** Utilizing `mod_storage` with string sanitization, `SaveManager` batching, and optimized C++ INI generation (halved disk serialization overhead).
 5.  **Network Architecture & High Concurrency Optimization:** **Active.**
     - **Adaptive Packet Compression:** **Implemented & Benchmarked.** `packet_compress` (`src/pc/network/packets/packet.c`) automatically adapts compression level (`Z_BEST_SPEED` on high-rate `PACKET_PLAYER` and `Z_BEST_COMPRESSION` on assets/mod files). Validated with automated load test suite (`tests/benchmark_concurrency_load.py`) simulating 16, 32, and 64 concurrent players at 30Hz tick rates.
-    - **Server-Side Spatial Interest Filtering:** **Implemented.** `src/pc/network/packets/packet.c` applies Euclidean distance culling (`maxSpatialDistSq = 15000^2`) to server-side `PACKET_PLAYER` rebroadcasts, preventing socket buffer saturation and eliminating redundant packet delivery to distant players in the same area.
+    - **Server-Side Spatial Interest Filtering:** **Implemented & Verified.** `src/pc/network/packets/packet.c` applies Euclidean distance culling (`maxSpatialDistSq = 15000^2`) to server-side `PACKET_PLAYER` rebroadcasts, preventing socket buffer saturation and eliminating redundant packet delivery to distant players in the same area. Verified with automated boundary test suite (`tests/test_spatial_interest_edgecases.py`).
 6.  **Dedicated Server Rewrite:** **Pending.** Deep C engine refactor to support thousands of concurrent players cleanly.
 
 ### Phase 4: Content Depth

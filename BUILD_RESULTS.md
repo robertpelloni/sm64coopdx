@@ -14,6 +14,7 @@
   - `tests/test_knockback.lua`: Passed
   - `tests/test_mmo_systems.lua`: Passed
   - `tests/test_party_trading.lua`: Passed
+  - `tests/test_spatial_interest_edgecases.py`: Passed (10/10 boundary & edge-case scenarios passed)
 
 ## 3. Concurrency & Network Load Benchmarks
 Automated concurrency simulation via `tests/benchmark_concurrency_load.py` evaluates server packet compression under multi-player load (30Hz tick rate):
