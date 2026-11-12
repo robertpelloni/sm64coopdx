@@ -232,9 +232,35 @@ void packet_receive(struct Packet* p) {
     // broadcast packet
     if (p->requestBroadcast) {
         if (gNetworkType == NT_SERVER && gNetworkSystem->requireServerBroadcast) {
+            // Spatial distance culling threshold for high-frequency motion packets (15000 units squared)
+            const f32 maxSpatialDistSq = 15000.0f * 15000.0f;
+            u8 senderIndex = p->localIndex;
+
             for (s32 i = 1; i < MAX_PLAYERS; i++) {
                 if (!gNetworkPlayers[i].connected) { continue; }
-                if (i == p->localIndex) { continue; }
+                if (i == senderIndex) { continue; }
+
+                // Server-side spatial interest culling:
+                // For high-rate player movement packets, skip transmitting to clients that are beyond
+                // render/interaction distance in the same area to reduce outbound socket load.
+                if (packetType == PACKET_PLAYER && senderIndex < MAX_PLAYERS) {
+                    struct NetworkPlayer* npSender = &gNetworkPlayers[senderIndex];
+                    struct NetworkPlayer* npTarget = &gNetworkPlayers[i];
+                    if (npSender->currPositionValid && npTarget->currPositionValid &&
+                        npSender->currCourseNum == npTarget->currCourseNum &&
+                        npSender->currAreaIndex == npTarget->currAreaIndex) {
+                        struct MarioState* mSender = &gMarioStates[senderIndex];
+                        struct MarioState* mTarget = &gMarioStates[i];
+                        f32 dx = mSender->pos[0] - mTarget->pos[0];
+                        f32 dy = mSender->pos[1] - mTarget->pos[1];
+                        f32 dz = mSender->pos[2] - mTarget->pos[2];
+                        f32 distSq = dx * dx + dy * dy + dz * dz;
+                        if (distSq > maxSpatialDistSq) {
+                            continue;
+                        }
+                    }
+                }
+
                 struct Packet p2 = { 0 };
                 packet_duplicate(p, &p2);
                 network_send_to(i, &p2);

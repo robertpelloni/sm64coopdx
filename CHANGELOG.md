@@ -1,6 +1,7 @@
 # Changelog
 
 ## v1.17 (Current)
+- **Server Spatial Interest Culling**: Integrated Euclidean distance filtering into `src/pc/network/packets/packet.c` for server-side `PACKET_PLAYER` rebroadcasts, eliminating redundant 30Hz movement transmissions to distant clients beyond active interest radius (15,000 units).
 - **Mod Storage Disk I/O Optimization**: Streamlined `src/pc/mods/mod_storage.cpp` by removing extraneous duplicate file serialization (`file.write`) calls immediately preceding `file.generate`, cutting mod storage disk write overhead and I/O latency in half.
 - **Network Performance**: Added adaptive packet compression to `src/pc/network/packets/packet.c`. Automatically selects `Z_BEST_SPEED` for high-frequency player movement packets (`PACKET_PLAYER`), significantly reducing CPU compression latency under concurrent multiplayer loads while retaining full decompression compatibility.
 - **Consolidated Dashboard UI**: Completely redesigned `mods/system_menu/main.lua` into a high-value single-page MMO Dashboard. Grouped items cleanly into Character, Economy, Adventure, and System domains with rich tooltip descriptions and intuitive controls.
